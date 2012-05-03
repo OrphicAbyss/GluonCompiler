@@ -1,5 +1,7 @@
 package simplecompiler;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 /**
@@ -102,8 +104,12 @@ public class GluonScanner {
 		if (current == c) {
 			getChar();
 			skipWhitespace();
-		} else
-			Error.expected("'" + c + "'");
+		} else {
+			if (c == '\n')
+				Error.expected("new line");
+			else
+				Error.expected("'" + c + "'");
+		}
 	}
 
 	/**
@@ -117,11 +123,20 @@ public class GluonScanner {
 		return (current == c);
 	}
 
-	public static void init(){
-		input = new Scanner(System.in);
+	private static void initVars(){
 		line = "";
 		position = 0;
 		lineNumber = 1;
-		getChar();
+		getChar();		
+	}
+	
+	public static void init(File file) throws FileNotFoundException{
+		input = new Scanner(file);
+		initVars();
+	}
+	
+	public static void init(){
+		input = new Scanner(System.in);
+		initVars();
 	}
 }

@@ -1,5 +1,8 @@
 package simplecompiler;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 
 /**
@@ -20,6 +23,20 @@ public class SimpleCompiler {
 		}
 	}
 
+	static void testVariableRegistered(String name){
+		if (!variables.contains(name)){
+			Error.abort("Variable used before assigned to: " + name);
+		}
+	}
+	
+	static String varToLabel(String varName){
+		return "var_"+varName;
+	}
+	
+	static String funcToLabel(String funcName){
+		return "func_"+funcName;
+	}
+	
 	/**
 	 * Test if the next token is an identifier. If it is, build the
 	 * identifier out of the stream.
@@ -37,6 +54,7 @@ public class SimpleCompiler {
 			GluonScanner.getChar();
 		}
 
+		GluonScanner.skipWhitespace();
 		return ident.toString();
 	}
 
@@ -56,19 +74,8 @@ public class SimpleCompiler {
 			GluonScanner.getChar();
 		}
 
+		GluonScanner.skipWhitespace();
 		return integer.toString();
-	}
-
-	/**
-	 * Output our code.
-	 *
-	 * @param s code to emit
-	 */
-	static void emitLn(String s, boolean prependTab){
-		if (prependTab)
-			System.out.printf("\t%s\n",s);
-		else
-			System.out.printf("%s\n",s);
 	}
 
 	/*
@@ -80,18 +87,22 @@ public class SimpleCompiler {
 		GluonScanner.matchAndAccept(')');
 	}
 
+	static void Function(String name){
+		GluonScanner.matchAndAccept('(');
+		GluonScanner.matchAndAccept(')');
+		GluonOutput.emitLn("CALL " + name, true);		
+	}
+	
 	/*
 	 * Parse and Translate a Function or Variable
 	 */
 	static void Ident() {
 		String name = getIdentifier();
 		if (GluonScanner.matchOnly('(')) {
-			GluonScanner.matchAndAccept('(');
-			GluonScanner.matchAndAccept(')');
-			emitLn("BSR " + name, false);
+			Function(name);
 		} else {
-			registerVariable(name);
-			emitLn("MOV [" + name + "], EAX", true);
+			testVariableRegistered(name);
+			GluonOutput.emitLn("MOV EAX, [" + varToLabel(name) + "]", true);
 		}
 	}
 
@@ -102,7 +113,7 @@ public class SimpleCompiler {
 		if (GluonScanner.isAlpha()) {
 			Ident();
 		} else {
-			emitLn("MOV EAX, " + getInteger(), true);
+			GluonOutput.emitLn("MOV EAX, " + getInteger(), true);
 		}
 	}
 
@@ -112,7 +123,7 @@ public class SimpleCompiler {
 	static void UnaryMinus() {
 		GluonScanner.matchAndAccept('-');
 		ConstVar();
-		emitLn("NEG EAX", true);
+		GluonOutput.emitLn("NEG EAX", true);
 	}
 
 	/*
@@ -138,8 +149,8 @@ public class SimpleCompiler {
 	static void Multiply() {
 		GluonScanner.matchAndAccept('*');
 		Factor();
-		emitLn("POP EBX", true);
-		emitLn("IMUL EAX,EBX", true);
+		GluonOutput.emitLn("POP EBX", true);
+		GluonOutput.emitLn("IMUL EAX,EBX", true);
 	}
 
 	/*
@@ -148,10 +159,10 @@ public class SimpleCompiler {
 	static void Divide() {
 		GluonScanner.matchAndAccept('/');
 		Factor();
-		emitLn("MOV EBX, EAX", true);
-		emitLn("MOV EDX, 0", true);
-		emitLn("POP EAX", true);
-		emitLn("IDIV EBX", true);
+		GluonOutput.emitLn("MOV EBX, EAX", true);
+		GluonOutput.emitLn("MOV EDX, 0", true);
+		GluonOutput.emitLn("POP EAX", true);
+		GluonOutput.emitLn("IDIV EBX", true);
 	}
 
 	/*
@@ -160,7 +171,7 @@ public class SimpleCompiler {
 	static void Term() {
 		Factor();
 		while (GluonScanner.current == '*' || GluonScanner.current == '/') {
-			emitLn("PUSH EAX", true);
+			GluonOutput.emitLn("PUSH EAX", true);
 			switch (GluonScanner.current) {
 				case '*':
 					Multiply();
@@ -178,8 +189,8 @@ public class SimpleCompiler {
 	static void Add() {
 		GluonScanner.matchAndAccept('+');
 		Term();
-		emitLn("POP EBX",true);
-		emitLn("ADD EAX,EBX", true);
+		GluonOutput.emitLn("POP EBX",true);
+		GluonOutput.emitLn("ADD EAX,EBX", true);
 	}
 
 	/*
@@ -188,9 +199,9 @@ public class SimpleCompiler {
 	static void Subtract() {
 		GluonScanner.matchAndAccept('-');
 		Term();
-		emitLn("POP EBX", true);
-		emitLn("SUB EAX,EBX", true);
-		emitLn("NEG EAX", true);
+		GluonOutput.emitLn("POP EBX", true);
+		GluonOutput.emitLn("SUB EAX,EBX", true);
+		GluonOutput.emitLn("NEG EAX", true);
 	}
 
 	/*
@@ -199,7 +210,7 @@ public class SimpleCompiler {
 	static void Expression() {
 		Term();
 		while (GluonScanner.current == '+' || GluonScanner.current == '-') {
-			emitLn("PUSH EAX", true);
+			GluonOutput.emitLn("PUSH EAX", true);
 			switch (GluonScanner.current) {
 				case '+':
 					Add();
@@ -214,76 +225,61 @@ public class SimpleCompiler {
 	/*
 	 * Parse and Translate an Assignment Statement
 	 */
-	static void Assignment() {
-		String name = getIdentifier();
-		registerVariable(name);
+	static void Assignment(String name) {
+		testVariableRegistered(name);
 		GluonScanner.matchAndAccept('=');
 		Expression();
-		emitLn("MOV ["+name+"],EAX", true);
-	}
-
-	static void printVariables(){
-		emitLn("; data section", false);
-//		emitLn("section '.data' writeable", false);
-
-		for (String var: variables){
-			emitLn(var + "\tdd\t?", true);
-		}
-	}
-
-	static void printASMStart(){
-		emitLn("org 100h",false);
-		emitLn("JMP start",true);
-		//TODO: include lib stuff like print char functions here
-		
-		emitLn(";print a number, AX contains the number, BX contains the base",false);
-		emitLn("print_number:",false);
-		emitLn("  MOV DX, 0",true);
-		emitLn("PUSH 0       ; push 0 on the stack as a marker when printing",true);
-		emitLn("calculate_digit:",false);
-		emitLn("DIV BX       ; divide by base",true);
-		emitLn("ADD DX, '0'  ; add '0' char to dx value to get correct char",true);
-		emitLn("PUSH DX      ; push the char onto stack for printing later",true);
-		emitLn("MOV DX, 0",true);
-		emitLn("TEST AX, AX  ; test if there is anything left",true);
-		emitLn("JNE calculate_digit ; jump back up to deal with the rest of the number",true);
-		emitLn(";print the chars on the stack until we get a zero",false);
-		emitLn("MOV AH, 2    ; set ah (print char when int 21h called)",true);
-		emitLn("print_off_stack:",false);
-		emitLn("POP DX       ; pop a character",true);
-		emitLn("TEST DX,DX   ; test if it's a null char",true);
-		emitLn("JE num_end   ; exit if null",true);
-		emitLn("INT 21h      ; otherwise print char",true);
-		emitLn("JMP print_off_stack",true);
-		emitLn("num_end:",false);
-		emitLn("MOV DX,0Dh   ; print CR",true);
-		emitLn("INT 21h",true);
-		emitLn("MOV DX,0Ah   ; print LF",true);
-		emitLn("INT 21h",true);
-		emitLn("RET",true);
-		emitLn(";end of print number",false);
-		emitLn("",false);
-		emitLn("start:",false);
+		GluonOutput.emitLn("MOV [" + varToLabel(name) + "],EAX", true);
 	}
 	
-	static void printASMEnd(){
-		emitLn(";Dos Exit Int",false);
-		emitLn("MOV AX,4C00h",true);
-		emitLn("INT 24h",true);
+	static void Define(){
+		GluonScanner.skipWhitespace();
+		String name = getIdentifier();
+		registerVariable(name);
 	}
+	
+	static void printVariables(){
+		GluonOutput.emitLn("; print all vars", false);
+		GluonOutput.emitLn("print:", false);
+		GluonOutput.emitLn("MOV BX, 10",true);
+		for (String var: variables){
+			GluonOutput.emitLn("MOV EAX, [" + varToLabel(var) + "]", true);
+			GluonOutput.emitLn("CALL print_number", true);
+		}
+		GluonOutput.emitLn("RET",true);
+		GluonOutput.emitLn("", false);
+		GluonOutput.emitLn("; data section", false);
+		for (String var: variables){
+			GluonOutput.emitLn(varToLabel(var) + "\tdd\t?", true);
+		}
+	}	
 	
 	/*
 	 * Initialize
 	 */
 	static void Init() {
 		variables = new ArrayList<String>();
-		GluonScanner.skipWhitespace();
-		printASMStart();
+		GluonOutput.output = new StringBuilder();
 		
-		Assignment();
+		GluonScanner.skipWhitespace();
+		GluonLibrary.printASMStart();
+		
+		while (!GluonScanner.matchOnly('.')){
+			String name = getIdentifier();
+			if (name.toUpperCase().equals("VAR")) {
+				Define();
+			} else if (GluonScanner.matchOnly('(')){
+				Function(name);
+			} else {
+				Assignment(name);
+			}
+			GluonScanner.matchAndAccept('\n');
+		}
 
-		printASMEnd();
+		GluonLibrary.printASMEnd();
 		printVariables();
+		
+		System.out.print(GluonOutput.getOutput());
 	}
 
 	/**
@@ -292,28 +288,25 @@ public class SimpleCompiler {
 	 * @param args the command line arguments
 	 */
 	public static void main(String[] args) {
-		GluonScanner.init();
-		Init();
-
-//		try {
-//			if (args.length == 0){
-//				// Print out help
-//				System.out.println("Gluon Compiler Usage: SimpleCompiler <filename>");
-//				return;
-//			}
-//
-//			// Make sure the source file exists
-//			File source = new File(args[0]);
-//			if (!source.exists()){
-//				System.out.println("Unable to find file to compile: " + args[0]);
-//			}
-//
-//			// Tokenise the source file
-//			in = new FileInputStream(source);
-//			Init();
-//
-//		} catch (FileNotFoundException ex) {
-//		}
-
+		try {
+			if (args.length == 0){
+				// Print out help
+				System.out.println("Gluon Compiler - No filename provided input from terminal:");
+				GluonScanner.init();
+				Init();
+			} else {
+				System.out.println("Gluon Compiler - Reading source file: " + args[0]);
+				// Make sure the source file exists
+				File source = new File(args[0]);
+				if (!source.exists()){
+					System.out.println("Unable to find file to compile.");
+				} else {
+					GluonScanner.init(source);
+					Init();
+				}
+			}
+		} catch (FileNotFoundException ex) {
+			System.out.println("Should not occur.");
+		}
 	}
 }
