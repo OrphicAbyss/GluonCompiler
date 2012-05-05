@@ -6,7 +6,7 @@ import java.util.ArrayList;
 /**
  * Simple compiler for language code named 'Gluon'
  */
-public class SimpleCompiler {
+public class GluonCompiler {
 	static ArrayList<String> variables;
 	static GluonScanner scanner;
 	static GluonOutput output;
