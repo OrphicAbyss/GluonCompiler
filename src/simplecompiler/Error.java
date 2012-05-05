@@ -6,12 +6,12 @@ package simplecompiler;
 public class Error {
 	/**
 	 * Print out an error message.
-	 *
-	 * @param error message to print to console
 	 */
-	public static void error(String error){
-		System.out.printf("Error on line %d position %d\n%s\n%s",GluonScanner.lineNumber,GluonScanner.position,error,GluonScanner.line);
-		for (int i=1; i<GluonScanner.position; i++){
+	public static void error(GluonScanner scanner, String error){
+		System.out.printf("Error on line %d position %d\n%s\n",scanner.lineNumber,scanner.position,error);
+		// Print out a marker to the line we were on
+		System.out.println(scanner.line);
+		for (int i=1; i<scanner.position; i++){
 			System.out.print("-");
 		}
 		System.out.println("^");
@@ -19,20 +19,16 @@ public class Error {
 
 	/**
 	 * Print out an error message and exit.
-	 *
-	 * @param error message to print to console
 	 */
-	public static void abort(String error){
-		error(error);
+	public static void abort(GluonScanner scanner, String error){
+		error(scanner, error);
 		System.exit(1);
 	}
 
-		/**
+	/**
 	 * Expected a different value/token in the data
-	 *
-	 * @param value
 	 */
-	public static void expected(String value){
-		abort("Expected: " + value);
+	public static void expected(GluonScanner scanner, String value){
+		abort(scanner, "Expected: " + value);
 	}
 }

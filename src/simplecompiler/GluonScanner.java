@@ -14,19 +14,38 @@ public class GluonScanner {
 	static final char TAB = '\t';
 	static final char SPACE = ' ';
 
-	static int lineNumber;
-	static int position;
+	int lineNumber = 0;
+	int position = 0;
 
-	static Scanner input;	// Source stream
-	static String line;		// Next source line
-	static char current;		// Lookahead character
+	Scanner input;	// Source stream
+	String line = "";		// Next source line
+	char current;		// Lookahead character
+	
+	public GluonScanner(File file){
+		try {
+			input = new Scanner(file);
+			initVars();
+		} catch (FileNotFoundException ex) {
+			Error.abort(this, "Error reading file: FileNotFound.");
+		}		
+	}
+	
+	public GluonScanner(){
+		input = new Scanner(System.in);
+		initVars();
+	}
+
+	private void initVars(){
+		getChar();
+		skipWhitespace();
+	}
 
 	/**
 	 * Read character from InputStream
 	 *
 	 * @throws Exception
 	 */
-	public static void getChar() {
+	public void getChar() {
 		if (position >= line.length()){
 			line = input.nextLine();
 			line = line + "\n";
@@ -41,7 +60,7 @@ public class GluonScanner {
 	/**
 	 * @return true if the current character is whitespace
 	 */
-	public static boolean isWhitespace(char c){
+	public boolean isWhitespace(char c){
 		return c == SPACE || c == TAB;
 	}
 
@@ -51,7 +70,7 @@ public class GluonScanner {
 	 * @param c Character to test
 	 * @return true if the character is an alpha char
 	 */
-	public static boolean isAlpha(char c){
+	public boolean isAlpha(char c){
 		return Character.isAlphabetic(c);
 	}
 
@@ -60,17 +79,38 @@ public class GluonScanner {
 	 *
 	 * @return true if the current character is an alpha char
 	 */
-	public static boolean isAlpha(){
+	public boolean isAlpha(){
 		return isAlpha(current);
 	}
 
+	/**
+	 * Test if the next token is an identifier. If it is, build the
+	 * identifier out of the stream.
+	 *
+	 * @return The identifier
+	 */
+	public String getIdentifier(){
+		if (!isAlpha(current))
+			Error.expected(this, "Identifier");
+
+		StringBuilder ident = new StringBuilder();
+
+		while (isAlpha(current) || isDigit(current)){
+			ident.append(current);
+			getChar();
+		}
+
+		skipWhitespace();
+		return ident.toString();
+	}
+	
 	/**
 	 * Test if the character is a digit.
 	 *
 	 * @param c Character to test
 	 * @return true if the character is a digit
 	 */
-	public static boolean isDigit(char c){
+	public boolean isDigit(char c){
 		return Character.isDigit(c);
 	}
 
@@ -79,15 +119,35 @@ public class GluonScanner {
 	 *
 	 * @return true if the current character is a digit
 	 */
-	public static boolean isDigit(){
+	public boolean isDigit(){
 		return isDigit(current);
 	}
 
 	/**
+	 * Test if the next token is an integer. If it is, build the integer
+	 * out of the stream.
+	 *
+	 * @return The integer found
+	 */
+	String getInteger(){
+		if (!isDigit(current))
+			Error.expected(this, "Integer");
+
+		StringBuilder integer = new StringBuilder();
+		while (isDigit(current)){
+			integer.append(current);
+			getChar();
+		}
+
+		skipWhitespace();
+		return integer.toString();
+	}
+	
+	/**
 	 * Move scanner to the next non-whitespace character. If we are
 	 * already at a non-whitespace character, nothing is done.
 	 */
-	public static void skipWhitespace(){
+	public void skipWhitespace(){
 		while (isWhitespace(current)){
 			getChar();
 		}
@@ -97,46 +157,29 @@ public class GluonScanner {
 	 * Match a specific character and move ahead in scanner. Error's out
 	 * if the character doesn't match.
 	 *
-	 * @param c Character expected in the stream
+	 * @param expectedChar Character expected in the stream
 	 */
-	static void matchAndAccept(char c){
-		GluonScanner.skipWhitespace();
-		if (current == c) {
+	void matchAndAccept(char expectedChar){
+		skipWhitespace();
+		if (current == expectedChar) {
 			getChar();
 			skipWhitespace();
 		} else {
-			if (c == '\n')
-				Error.expected("new line");
+			if (expectedChar == '\n')
+				Error.expected(this, "new line");
 			else
-				Error.expected("'" + c + "'");
+				Error.expected(this, "'" + expectedChar + "'");
 		}
 	}
 
 	/**
 	 * Match a specific character but don't move ahead in scanner.
 	 *
-	 * @param c Character to match
+	 * @param expectedChar Character to match
 	 * @return true if the character matches the current char
 	 */
-	static boolean matchOnly(char c){
+	boolean matchOnly(char expectedChar){
 		skipWhitespace();
-		return (current == c);
-	}
-
-	private static void initVars(){
-		line = "";
-		position = 0;
-		lineNumber = 1;
-		getChar();		
-	}
-	
-	public static void init(File file) throws FileNotFoundException{
-		input = new Scanner(file);
-		initVars();
-	}
-	
-	public static void init(){
-		input = new Scanner(System.in);
-		initVars();
+		return (current == expectedChar);
 	}
 }

@@ -6,21 +6,24 @@ package simplecompiler;
  * @author DrLabman
  */
 public class GluonOutput {
-	static StringBuilder output;
+	StringBuilder output;
 	
-		/**
-	 * Output our code.
-	 *
-	 * @param s code to emit
-	 */
-	static void emitLn(String s, boolean prependTab){
+	public GluonOutput(){
+		output = new StringBuilder();
+	}
+	
+	public void outputLine(String codeLine, boolean prependTab){
 		if (prependTab)
-			output.append(String.format("\t%s\n",s));
+			output.append(String.format("\t%s\n",codeLine));
 		else
-			output.append(String.format("%s\n",s));
+			output.append(String.format("%s\n",codeLine));
 	}
 
-	static String getOutput(){
+	public String getOutput(){
 		return output.toString();
+	}
+	
+	public void setOutput(StringBuilder output){
+		this.output = output;
 	}
 }
