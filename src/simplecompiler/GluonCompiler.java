@@ -29,24 +29,21 @@ public class SimpleCompiler {
 		}
 	}
 	
-	/*
-	 * Parse and Translate Parentheses
-	 */
+	/** Parse and Translate Parentheses */
 	static void Parentheses() {
 		scanner.matchAndAccept('(');
 		Expression();
 		scanner.matchAndAccept(')');
 	}
 
+	/** Parse and Translate a Function */
 	static void Function(String name){
 		scanner.matchAndAccept('(');
 		scanner.matchAndAccept(')');
 		output.outputLine("CALL " + name, true);		
 	}
 	
-	/*
-	 * Parse and Translate a Function or Variable
-	 */
+	/** Parse and Translate a Function or Variable */
 	static void Ident() {
 		String name = scanner.getIdentifier();
 		if (scanner.matchOnly('(')) {
@@ -57,9 +54,7 @@ public class SimpleCompiler {
 		}
 	}
 
-	/*
-	 * Parse and Translate a Constant or Variable
-	 */
+	/** Parse and Translate a Constant or Variable */
 	static void ConstVar() {
 		if (scanner.isAlpha()) {
 			Ident();
@@ -68,18 +63,14 @@ public class SimpleCompiler {
 		}
 	}
 
-	/*
-	 * Parse and Translate a Unary Minus
-	 */
+	/** Parse and Translate a Unary Minus */
 	static void UnaryMinus() {
 		scanner.matchAndAccept('-');
 		ConstVar();
 		output.outputLine("NEG EAX", true);
 	}
 
-	/*
-	 * Parse and Translate a Math Factor
-	 */
+	/** Parse and Translate a Math Factor */
 	static void Factor() {
 		switch (scanner.current) {
 			case '(':
@@ -94,9 +85,7 @@ public class SimpleCompiler {
 		}
 	}
 
-	/*
-	 * Recognize and Translate a Multiply
-	 */
+	/** Recognize and Translate a Multiply */
 	static void Multiply() {
 		scanner.matchAndAccept('*');
 		Factor();
@@ -104,9 +93,7 @@ public class SimpleCompiler {
 		output.outputLine("IMUL EAX,EBX", true);
 	}
 
-	/*
-	 * Recognize and Translate a Divide
-	 */
+	/** Recognize and Translate a Divide */
 	static void Divide() {
 		scanner.matchAndAccept('/');
 		Factor();
@@ -116,9 +103,7 @@ public class SimpleCompiler {
 		output.outputLine("IDIV EBX", true);
 	}
 
-	/*
-	 * Parse and Translate a Math Term
-	 */
+	/** Parse and Translate a Math Term */
 	static void Term() {
 		Factor();
 		while (scanner.current == '*' || scanner.current == '/') {
@@ -134,9 +119,7 @@ public class SimpleCompiler {
 		}
 	}
 
-	/*
-	 * Recognize and Translate an Add
-	 */
+	/** Recognize and Translate an Add */
 	static void Add() {
 		scanner.matchAndAccept('+');
 		Term();
@@ -144,9 +127,7 @@ public class SimpleCompiler {
 		output.outputLine("ADD EAX,EBX", true);
 	}
 
-	/*
-	 * Recognize and Translate a Subtract
-	 */
+	/** Recognize and Translate a Subtract */
 	static void Subtract() {
 		scanner.matchAndAccept('-');
 		Term();
@@ -155,9 +136,7 @@ public class SimpleCompiler {
 		output.outputLine("NEG EAX", true);
 	}
 
-	/*
-	 * Parse and Translate a Math Expression
-	 */
+	/** Parse and Translate a Math Expression */
 	static void Expression() {
 		Term();
 		while (scanner.current == '+' || scanner.current == '-') {
@@ -173,9 +152,7 @@ public class SimpleCompiler {
 		}
 	}
 
-	/**
-	 * Parse and Translate an Assignment Statement
-	 */
+	/** Parse and Translate an Assignment Statement */
 	static void Assignment(String name) {
 		testVariableRegistered(name);
 		scanner.matchAndAccept('=');
@@ -183,9 +160,7 @@ public class SimpleCompiler {
 		output.outputLine("MOV [" + GluonLibrary.varToLabel(name) + "],EAX", true);
 	}
 	
-	/**
-	 * Parse a variable declaration
-	 */
+	/** Parse a variable declaration */
 	static void DefineVariable(){
 		scanner.skipWhitespace();
 		String name = scanner.getIdentifier();
@@ -196,26 +171,28 @@ public class SimpleCompiler {
 		}
 	}
 	
+	/** Parse a statement */
+	static void Statement(){
+		String name = scanner.getIdentifier();
+		if (name.toUpperCase().equals("VAR")) {
+			DefineVariable();
+		} else if (scanner.matchOnly('(')){
+			Function(name);
+		} else {
+			Assignment(name);
+		}		
+	}
 
-	
-	/*
-	 * Initialize
-	 */
+	/** Main code compiling */
 	static void Init() {
 		variables = new ArrayList<>();
 		output = new GluonOutput();
 		
 		GluonLibrary.printASMStart(output);
 		
-		while (!scanner.matchOnly('.')){
-			String name = scanner.getIdentifier();
-			if (name.toUpperCase().equals("VAR")) {
-				DefineVariable();
-			} else if (scanner.matchOnly('(')){
-				Function(name);
-			} else {
-				Assignment(name);
-			}
+		// One statement per line
+		while (!scanner.isEOF()){
+			Statement();
 			scanner.matchAndAccept('\n');
 		}
 
@@ -227,8 +204,6 @@ public class SimpleCompiler {
 
 	/**
 	 * Takes a filename as the main argument.
-	 *
-	 * @param args the command line arguments
 	 */
 	public static void main(String[] args) {
 		if (args.length == 0){

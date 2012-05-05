@@ -2,6 +2,7 @@ package simplecompiler;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 /**
@@ -20,6 +21,7 @@ public class GluonScanner {
 	Scanner input;	// Source stream
 	String line = "";		// Next source line
 	char current;		// Lookahead character
+	boolean eof;
 	
 	public GluonScanner(File file){
 		try {
@@ -36,25 +38,39 @@ public class GluonScanner {
 	}
 
 	private void initVars(){
+		eof = false;
 		getChar();
 		skipWhitespace();
+	}
+	
+	/**
+	 * Returns true when we reach the end of the file
+	 */
+	public boolean isEOF(){
+		return eof;
 	}
 
 	/**
 	 * Read character from InputStream
-	 *
-	 * @throws Exception
 	 */
 	public void getChar() {
-		if (position >= line.length()){
-			line = input.nextLine();
-			line = line + "\n";
-			position = 0;
-			lineNumber++;
-		}
+		try {
+			if (position >= line.length()){
+				line = input.nextLine();
+				line = line + "\n";
+				position = 0;
+				lineNumber++;
+				
+				// only a period on a line means eof
+				if (".\n".equals(line))
+					eof = true;
+			}
 
-		current = line.charAt(position);
-		position++;
+			current = line.charAt(position);
+			position++;
+		} catch (NoSuchElementException nsee){
+			eof = true;
+		}
 	}
 
 	/**
