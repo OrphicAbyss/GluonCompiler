@@ -1,34 +1,14 @@
-package simplecompiler;
+package gluoncompiler;
 
 import java.io.File;
-import java.util.ArrayList;
 
 /**
  * Simple compiler for language code named 'Gluon'
  */
 public class GluonCompiler {
-	static ArrayList<String> variables;
 	static GluonScanner scanner;
 	static GluonOutput output;
 
-	/**
-	 * Register a variable in our list of variables if it is not already
-	 * contained in it.
-	 *
-	 * @param name
-	 */
-	static void registerVariable(String name){
-		if (!variables.contains(name)){
-			variables.add(name);
-		}
-	}
-
-	static void testVariableRegistered(String name){
-		if (!variables.contains(name)){
-			Error.abort(scanner, "Variable used before assigned to: " + name);
-		}
-	}
-	
 	/** Parse and Translate Parentheses */
 	static void Parentheses() {
 		scanner.matchAndAccept('(');
@@ -40,16 +20,16 @@ public class GluonCompiler {
 	static void Function(String name){
 		scanner.matchAndAccept('(');
 		scanner.matchAndAccept(')');
-		output.outputLine("CALL " + name, true);		
+		output.outputLine("CALL " + name, true);
 	}
-	
+
 	/** Parse and Translate a Function or Variable */
 	static void Ident() {
 		String name = scanner.getIdentifier();
 		if (scanner.matchOnly('(')) {
 			Function(name);
 		} else {
-			testVariableRegistered(name);
+			GluonVariable.testVariableRegistered(name);
 			output.outputLine("MOV EAX, [" + GluonLibrary.varToLabel(name) + "]", true);
 		}
 	}
@@ -154,23 +134,23 @@ public class GluonCompiler {
 
 	/** Parse and Translate an Assignment Statement */
 	static void Assignment(String name) {
-		testVariableRegistered(name);
+		GluonVariable.testVariableRegistered(name);
 		scanner.matchAndAccept('=');
 		Expression();
 		output.outputLine("MOV [" + GluonLibrary.varToLabel(name) + "],EAX", true);
 	}
-	
+
 	/** Parse a variable declaration */
 	static void DefineVariable(){
 		scanner.skipWhitespace();
 		String name = scanner.getIdentifier();
-		registerVariable(name);
-		
+		GluonVariable.registerVariable(name);
+
 		if (scanner.matchOnly('=')){
 			Assignment(name);
 		}
 	}
-	
+
 	/** Parse a statement */
 	static void Statement(){
 		String name = scanner.getIdentifier();
@@ -180,16 +160,18 @@ public class GluonCompiler {
 			Function(name);
 		} else {
 			Assignment(name);
-		}		
+		}
 	}
 
 	/** Main code compiling */
 	static void Init() {
-		variables = new ArrayList<>();
+		Error.init(scanner);
+		GluonVariable.init();
+
 		output = new GluonOutput();
-		
+
 		GluonLibrary.printASMStart(output);
-		
+
 		// One statement per line
 		while (!scanner.isEOF()){
 			Statement();
@@ -197,8 +179,8 @@ public class GluonCompiler {
 		}
 
 		GluonLibrary.printASMEnd(output);
-		GluonLibrary.printVariables(output, variables);
-		
+		GluonLibrary.printVariables(output, GluonVariable.getVariables());
+
 		System.out.print(output.getOutput());
 	}
 
@@ -209,18 +191,18 @@ public class GluonCompiler {
 		if (args.length == 0){
 			// Print out help
 			System.out.println("Gluon Compiler - No filename provided input from terminal:");
-			scanner = new GluonScanner();	
+			scanner = new GluonScanner();
 		} else {
 			System.out.println("Gluon Compiler - Reading source file: " + args[0]);
 			// Make sure the source file exists
 			File source = new File(args[0]);
 			if (!source.exists()){
-				Error.abort(scanner, "Source file does not exist.");
+				Error.abort("Source file does not exist.");
 			} else {
 				scanner = new GluonScanner(source);
 			}
 		}
-		
+
 		Init();
 	}
 }

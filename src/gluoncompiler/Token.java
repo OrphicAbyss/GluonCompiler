@@ -1,4 +1,4 @@
-package simplecompiler;
+package gluoncompiler;
 
 /**
  * Represents a token in a source file.

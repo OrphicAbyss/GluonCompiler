@@ -1,4 +1,4 @@
-package simplecompiler;
+package gluoncompiler;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -22,16 +22,16 @@ public class GluonScanner {
 	String line = "";		// Next source line
 	char current;		// Lookahead character
 	boolean eof;
-	
+
 	public GluonScanner(File file){
 		try {
 			input = new Scanner(file);
 			initVars();
 		} catch (FileNotFoundException ex) {
-			Error.abort(this, "Error reading file: FileNotFound.");
-		}		
+			Error.abort("Error reading file: FileNotFound.");
+		}
 	}
-	
+
 	public GluonScanner(){
 		input = new Scanner(System.in);
 		initVars();
@@ -42,7 +42,7 @@ public class GluonScanner {
 		getChar();
 		skipWhitespace();
 	}
-	
+
 	/**
 	 * Returns true when we reach the end of the file
 	 */
@@ -60,7 +60,7 @@ public class GluonScanner {
 				line = line + "\n";
 				position = 0;
 				lineNumber++;
-				
+
 				// only a period on a line means eof
 				if (".\n".equals(line))
 					eof = true;
@@ -107,7 +107,7 @@ public class GluonScanner {
 	 */
 	public String getIdentifier(){
 		if (!isAlpha(current))
-			Error.expected(this, "Identifier");
+			Error.expected("Identifier");
 
 		StringBuilder ident = new StringBuilder();
 
@@ -119,7 +119,7 @@ public class GluonScanner {
 		skipWhitespace();
 		return ident.toString();
 	}
-	
+
 	/**
 	 * Test if the character is a digit.
 	 *
@@ -147,7 +147,7 @@ public class GluonScanner {
 	 */
 	String getInteger(){
 		if (!isDigit(current))
-			Error.expected(this, "Integer");
+			Error.expected("Integer");
 
 		StringBuilder integer = new StringBuilder();
 		while (isDigit(current)){
@@ -158,7 +158,7 @@ public class GluonScanner {
 		skipWhitespace();
 		return integer.toString();
 	}
-	
+
 	/**
 	 * Move scanner to the next non-whitespace character. If we are
 	 * already at a non-whitespace character, nothing is done.
@@ -182,9 +182,9 @@ public class GluonScanner {
 			skipWhitespace();
 		} else {
 			if (expectedChar == '\n')
-				Error.expected(this, "new line");
+				Error.expected("new line");
 			else
-				Error.expected(this, "'" + expectedChar + "'");
+				Error.expected("'" + expectedChar + "'");
 		}
 	}
 

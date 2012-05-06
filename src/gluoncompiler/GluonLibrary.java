@@ -1,28 +1,28 @@
-package simplecompiler;
+package gluoncompiler;
 
 import java.util.Collection;
 
 /**
  * Contains library code for including in the assembler output.
- * 
+ *
  * @author DrLabman
  */
 public class GluonLibrary {
 	public static String varToLabel(String varName){
 		return "var_"+varName;
 	}
-	
+
 	public static String funcToLabel(String funcName){
 		return "func_"+funcName;
 	}
 
-	
+
 	public static void printASMStart(GluonOutput output){
 		output.outputLine("org 100h",false);
 		output.outputLine(";jump to start of program",false);
 		output.outputLine("JMP start",true);
 		//TODO: include lib stuff like print char functions here
-		
+
 		output.outputLine(";print a number, AX contains the number, BX contains the base",false);
 		output.outputLine("print_number:",false);
 		output.outputLine("MOV DX, 0",true);
@@ -53,13 +53,13 @@ public class GluonLibrary {
 		output.outputLine(";start of program",false);
 		output.outputLine("start:",false);
 	}
-	
+
 	public static void printASMEnd(GluonOutput output){
 		output.outputLine(";Dos Exit Call",false);
 		output.outputLine("MOV AX,4C00h",true);
 		output.outputLine("INT 21h",true);
 	}
-	
+
 	public static void printVariables(GluonOutput output, Collection<String> variables){
 		output.outputLine("; print all vars", false);
 		output.outputLine("print:", false);
