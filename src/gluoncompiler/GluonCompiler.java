@@ -65,7 +65,7 @@ public class GluonCompiler {
 		}
 	}
 
-	/** Recognize and Translate a Multiply */
+	/** Parse and Translate a Multiply */
 	static void Multiply() {
 		scanner.matchAndAccept('*');
 		Factor();
@@ -73,7 +73,7 @@ public class GluonCompiler {
 		output.outputLine("IMUL EAX,EBX", true);
 	}
 
-	/** Recognize and Translate a Divide */
+	/** Parse and Translate a Divide */
 	static void Divide() {
 		scanner.matchAndAccept('/');
 		Factor();
@@ -99,7 +99,7 @@ public class GluonCompiler {
 		}
 	}
 
-	/** Recognize and Translate an Add */
+	/** Parse and Translate an Add */
 	static void Add() {
 		scanner.matchAndAccept('+');
 		Term();
@@ -107,7 +107,7 @@ public class GluonCompiler {
 		output.outputLine("ADD EAX,EBX", true);
 	}
 
-	/** Recognize and Translate a Subtract */
+	/** Parse and Translate a Subtract */
 	static void Subtract() {
 		scanner.matchAndAccept('-');
 		Term();
@@ -119,7 +119,7 @@ public class GluonCompiler {
 	/** Parse and Translate a Math Expression */
 	static void Expression() {
 		Term();
-		while (scanner.current == '+' || scanner.current == '-') {
+		while (scanner.matchOnly('+') || scanner.matchOnly('-')) {
 			output.outputLine("PUSH EAX", true);
 			switch (scanner.current) {
 				case '+':
@@ -130,6 +130,45 @@ public class GluonCompiler {
 					break;
 			}
 		}
+	}
+
+	/** Parse and Translate a Boolean Expression */
+	static void BooleanExpression() {
+		Expression();
+//		while (scanner.matchOnly('=') || scanner.matchOnly('<') || scanner.matchOnly('>') || scanner.matchOnly('!')){
+//			output.outputLine("PUSH EAX", true);
+//			switch(scanner.current){
+//				case '=':
+//					scanner.matchAndAccept('=');
+//					scanner.matchAndAccept('=');
+//					Expression();
+//					output.outputLine("POP EBX", true);
+//					output.outputLine("TEST EAX, EBX", true);
+//
+//					break;
+//				case '<':
+//					scanner.matchAndAccept('<');
+//					scanner.matchAndAccept('=');
+//					Expression();
+//					output.outputLine("POP EBX", true);
+//
+//					break;
+//				case '>':
+//					scanner.matchAndAccept('>');
+//					scanner.matchAndAccept('=');
+//					Expression();
+//					output.outputLine("POP EBX", true);
+//
+//					break;
+//				case '!':
+//					scanner.matchAndAccept('!');
+//					scanner.matchAndAccept('=');
+//					Expression();
+//					output.outputLine("POP EBX", true);
+//
+//					break;
+//			}
+//		}
 	}
 
 	/** Parse and Translate an Assignment Statement */
@@ -154,12 +193,20 @@ public class GluonCompiler {
 	/** Parse a statement */
 	static void Statement(){
 		String name = scanner.getIdentifier();
-		if (name.toUpperCase().equals("VAR")) {
-			DefineVariable();
-		} else if (scanner.matchOnly('(')){
-			Function(name);
-		} else {
-			Assignment(name);
+		switch (name.toUpperCase()){
+			case "VAR":
+				DefineVariable();
+				break;
+			case "IF":
+
+				break;
+			default:
+				if (scanner.matchOnly('(')){
+					Function(name);
+				} else {
+					Assignment(name);
+				}
+				break;
 		}
 	}
 

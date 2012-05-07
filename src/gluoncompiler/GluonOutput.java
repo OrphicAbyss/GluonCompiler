@@ -2,8 +2,6 @@ package gluoncompiler;
 
 /**
  * Output class to hold output ready to be written to a file.
- *
- * @author DrLabman
  */
 public class GluonOutput {
 	StringBuilder output;
