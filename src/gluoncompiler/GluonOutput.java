@@ -4,7 +4,7 @@ package gluoncompiler;
  * Output class to hold output ready to be written to a file.
  */
 public class GluonOutput {
-	StringBuilder output;
+	private StringBuilder output;
 
 	public GluonOutput(){
 		output = new StringBuilder();

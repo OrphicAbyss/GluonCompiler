@@ -107,7 +107,7 @@ public class GluonScanner {
 	 */
 	public String getIdentifier(){
 		if (!isAlpha(current))
-			Error.expected("Identifier");
+			Error.expected("Identifier", null);
 
 		StringBuilder ident = new StringBuilder();
 
@@ -147,7 +147,7 @@ public class GluonScanner {
 	 */
 	String getInteger(){
 		if (!isDigit(current))
-			Error.expected("Integer");
+			Error.expected("Integer", null);
 
 		StringBuilder integer = new StringBuilder();
 		while (isDigit(current)){
@@ -175,16 +175,16 @@ public class GluonScanner {
 	 *
 	 * @param expectedChar Character expected in the stream
 	 */
-	void matchAndAccept(char expectedChar){
+	void matchAndAccept(char expectedChar, String matching){
 		skipWhitespace();
 		if (current == expectedChar) {
 			getChar();
 			skipWhitespace();
 		} else {
 			if (expectedChar == '\n')
-				Error.expected("new line");
+				Error.expected("new line", matching);
 			else
-				Error.expected("'" + expectedChar + "'");
+				Error.expected("'" + expectedChar + "'", matching);
 		}
 	}
 

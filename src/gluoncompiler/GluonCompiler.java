@@ -4,6 +4,12 @@ import java.io.File;
 
 /**
  * Simple compiler for language code named 'Gluon'
+ * 
+ * TODO: add functions
+ * TODO: better token scanning
+ * TODO: add classes
+ * TODO: add strings
+ * TODO: add arrays
  */
 public class GluonCompiler {
 	static GluonScanner scanner;
@@ -11,15 +17,15 @@ public class GluonCompiler {
 
 	/** Parse and Translate Parentheses */
 	static void Parentheses() {
-		scanner.matchAndAccept('(');
+		scanner.matchAndAccept('(', null);
 		Expression();
-		scanner.matchAndAccept(')');
+		scanner.matchAndAccept(')', null);
 	}
 
 	/** Parse and Translate a Function */
 	static void Function(String name){
-		scanner.matchAndAccept('(');
-		scanner.matchAndAccept(')');
+		scanner.matchAndAccept('(', null);
+		scanner.matchAndAccept(')', null);
 		output.outputLine("CALL " + name, true);
 	}
 
@@ -45,7 +51,7 @@ public class GluonCompiler {
 
 	/** Parse and Translate a Unary Minus */
 	static void UnaryMinus() {
-		scanner.matchAndAccept('-');
+		scanner.matchAndAccept('-', "Unary Minus");
 		ConstVar();
 		output.outputLine("NEG EAX", true);
 	}
@@ -67,7 +73,7 @@ public class GluonCompiler {
 
 	/** Parse and Translate a Multiply */
 	static void Multiply() {
-		scanner.matchAndAccept('*');
+		scanner.matchAndAccept('*', "Multiplication");
 		Factor();
 		output.outputLine("POP EBX", true);
 		output.outputLine("IMUL EAX,EBX", true);
@@ -75,7 +81,7 @@ public class GluonCompiler {
 
 	/** Parse and Translate a Divide */
 	static void Divide() {
-		scanner.matchAndAccept('/');
+		scanner.matchAndAccept('/', "Division");
 		Factor();
 		output.outputLine("MOV EBX, EAX", true);
 		output.outputLine("MOV EDX, 0", true);
@@ -101,7 +107,7 @@ public class GluonCompiler {
 
 	/** Parse and Translate an Add */
 	static void Add() {
-		scanner.matchAndAccept('+');
+		scanner.matchAndAccept('+', "Addition");
 		Term();
 		output.outputLine("POP EBX",true);
 		output.outputLine("ADD EAX,EBX", true);
@@ -109,7 +115,7 @@ public class GluonCompiler {
 
 	/** Parse and Translate a Subtract */
 	static void Subtract() {
-		scanner.matchAndAccept('-');
+		scanner.matchAndAccept('-', "Subtraction");
 		Term();
 		output.outputLine("POP EBX", true);
 		output.outputLine("SUB EAX,EBX", true);
@@ -135,48 +141,83 @@ public class GluonCompiler {
 	/** Parse and Translate a Boolean Expression */
 	static void BooleanExpression() {
 		Expression();
-//		while (scanner.matchOnly('=') || scanner.matchOnly('<') || scanner.matchOnly('>') || scanner.matchOnly('!')){
-//			output.outputLine("PUSH EAX", true);
-//			switch(scanner.current){
-//				case '=':
-//					scanner.matchAndAccept('=');
-//					scanner.matchAndAccept('=');
-//					Expression();
-//					output.outputLine("POP EBX", true);
-//					output.outputLine("TEST EAX, EBX", true);
-//
-//					break;
-//				case '<':
-//					scanner.matchAndAccept('<');
-//					scanner.matchAndAccept('=');
-//					Expression();
-//					output.outputLine("POP EBX", true);
-//
-//					break;
-//				case '>':
-//					scanner.matchAndAccept('>');
-//					scanner.matchAndAccept('=');
-//					Expression();
-//					output.outputLine("POP EBX", true);
-//
-//					break;
-//				case '!':
-//					scanner.matchAndAccept('!');
-//					scanner.matchAndAccept('=');
-//					Expression();
-//					output.outputLine("POP EBX", true);
-//
-//					break;
-//			}
-//		}
+		if (scanner.matchOnly('=') || scanner.matchOnly('<') || scanner.matchOnly('>') || scanner.matchOnly('!')){
+			boolean eq = false;
+			
+			output.outputLine("PUSH EAX", true);
+			switch(scanner.current){
+				case '=':
+					scanner.matchAndAccept('=', "Boolean Expression");
+					scanner.matchAndAccept('=', "Boolean Expression");
+					Expression();
+					output.outputLine("POP EBX", true);
+					output.outputLine("CMP EAX, EBX", true);
+					output.outputLine("SETE AL", true);
+					break;
+				case '<':
+					scanner.matchAndAccept('<', "Boolean Expression");
+					if (scanner.matchOnly('=')){
+						scanner.matchAndAccept('=', "Boolean Expression");
+						eq = true;
+					}
+					Expression();
+					output.outputLine("POP EBX", true);
+					output.outputLine("CMP EAX, EBX", true);
+					if (eq)
+						output.outputLine("SETL AL", true);
+					else
+						output.outputLine("SETLE AL", true);
+					
+					break;
+				case '>':
+					scanner.matchAndAccept('>', "Boolean Expression");
+					if (scanner.matchOnly('=')){
+						scanner.matchAndAccept('=', "Boolean Expression");
+						eq = true;
+					}
+					Expression();
+					output.outputLine("POP EBX", true);
+					output.outputLine("CMP EAX, EBX", true);
+					if (eq)
+						output.outputLine("SETG AL", true);
+					else
+						output.outputLine("SETGE AL", true);
+					break;
+				case '!':
+					scanner.matchAndAccept('!', "Boolean Expression");
+					scanner.matchAndAccept('=', "Boolean Expression");
+					Expression();
+					output.outputLine("POP EBX", true);
+					output.outputLine("CMP EAX, EBX", true);
+					output.outputLine("SETNE AL", true);
+					break;
+			}
+		}
 	}
 
 	/** Parse and Translate an Assignment Statement */
 	static void Assignment(String name) {
 		GluonVariable.testVariableRegistered(name);
-		scanner.matchAndAccept('=');
-		Expression();
-		output.outputLine("MOV [" + GluonLibrary.varToLabel(name) + "],EAX", true);
+		
+		if (scanner.matchOnly('+')){
+			scanner.matchAndAccept('+', "Assignment");
+			scanner.matchAndAccept('=', "Assignment");
+			BooleanExpression();
+			output.outputLine("MOV EBX,[" + GluonLibrary.varToLabel(name) + "]", true);
+			output.outputLine("ADD EAX,EBX", true);
+			output.outputLine("MOV [" + GluonLibrary.varToLabel(name) + "],EAX", true);
+		} else if (scanner.matchOnly('-')){
+			scanner.matchAndAccept('-', "Assignment");
+			scanner.matchAndAccept('=', "Assignment");
+			BooleanExpression();
+			output.outputLine("MOV EBX,[" + GluonLibrary.varToLabel(name) + "]", true);
+			output.outputLine("SUB EBX,EAX", true);
+			output.outputLine("MOV [" + GluonLibrary.varToLabel(name) + "],EBX", true);			
+		} else {
+			scanner.matchAndAccept('=', "Assignment");
+			BooleanExpression();
+			output.outputLine("MOV [" + GluonLibrary.varToLabel(name) + "],EAX", true);
+		}
 	}
 
 	/** Parse a variable declaration */
@@ -189,16 +230,76 @@ public class GluonCompiler {
 			Assignment(name);
 		}
 	}
+	
+	/** Parse and Translate a While Statement */
+	static void WhileStatement(){
+		String labelStart = "while_on_line_" + scanner.lineNumber + "_start";
+		String labelEnd = "while_on_line_" + scanner.lineNumber + "_end";
+		output.outputLine(labelStart + ":", false);
+		BooleanExpression();
+		scanner.matchAndAccept('\n', "While Statement");
+		output.outputLine("TEST EAX, EAX", true);
+		output.outputLine("JNZ " + labelEnd, true);
+		StatementsUntil("END");
+		output.outputLine("JMP " + labelStart, true);
+		output.outputLine(labelEnd + ":", false);
+	}
+	
+	/** Parse and Translate a For Statement */
+	static void ForStatement(){
+		String labelStart = "for_on_line_" + scanner.lineNumber + "_start";
+		String labelTest = "for_on_line_" + scanner.lineNumber + "_test";
+		String labelInc = "for_on_line_" + scanner.lineNumber + "_inc";
+		String labelEnd = "for_on_line_" + scanner.lineNumber + "_end";
+		
+		// first assignment
+		if (!scanner.matchOnly(':'))
+			Assignment(scanner.getIdentifier());
+		scanner.matchAndAccept(':', "For Statement");
+		// loop test
+		output.outputLine(labelTest + ":", false);
+		BooleanExpression();
+		scanner.matchAndAccept(':', "For Statement");
+		output.outputLine("TEST EAX, EAX", true);
+		output.outputLine("JNZ " + labelEnd, true);
+		output.outputLine("JMP " + labelStart, true);
+		// inc statement
+		output.outputLine(labelInc + ":", false);
+		Assignment(scanner.getIdentifier());
+		output.outputLine("JMP " + labelTest, true);
+		// loop code
+		output.outputLine(labelStart + ":", false);
+		scanner.matchAndAccept('\n', "For Statement");
+		StatementsUntil("END");
+		output.outputLine("JMP " + labelInc, false);
+		output.outputLine(labelEnd + ":", false);
+	}
 
+	/** Parse and Translate an If Statement */
+	static void IfStatement(){
+		BooleanExpression();
+		String label = "if_on_ln_" + scanner.lineNumber;
+		output.outputLine("TEST EAX, EAX", true);
+		output.outputLine("JZ " + label, true);
+		scanner.matchAndAccept('\n', "If Statement");
+		StatementsUntil("END");
+		output.outputLine(label + ":", false);
+	}
+	
 	/** Parse a statement */
-	static void Statement(){
-		String name = scanner.getIdentifier();
+	static void Statement(String name){
 		switch (name.toUpperCase()){
 			case "VAR":
 				DefineVariable();
 				break;
 			case "IF":
-
+				IfStatement();
+				break;
+			case "FOR":
+				ForStatement();
+				break;
+			case "WHILE":
+				WhileStatement();
 				break;
 			default:
 				if (scanner.matchOnly('(')){
@@ -210,6 +311,17 @@ public class GluonCompiler {
 		}
 	}
 
+	static void StatementsUntil(String identifier){
+		String currentIdentifier;
+		while (!scanner.isEOF()){
+			currentIdentifier = scanner.getIdentifier();
+			if (identifier.equals(currentIdentifier.toUpperCase()))
+				break;
+			Statement(currentIdentifier);
+			scanner.matchAndAccept('\n', "Statements");
+		}
+	}
+	
 	/** Main code compiling */
 	static void Init() {
 		Error.init(scanner);
@@ -219,11 +331,8 @@ public class GluonCompiler {
 
 		GluonLibrary.printASMStart(output);
 
-		// One statement per line
-		while (!scanner.isEOF()){
-			Statement();
-			scanner.matchAndAccept('\n');
-		}
+		// Match statements until the end of file
+		StatementsUntil("");
 
 		GluonLibrary.printASMEnd(output);
 		GluonLibrary.printVariables(output, GluonVariable.getVariables());

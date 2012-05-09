@@ -17,7 +17,7 @@ public class Error {
 		if (scanner != null){
 			System.out.printf("Error on line %d position %d\n%s\n",scanner.lineNumber,scanner.position,error);
 			// Print out a marker to the line we were on
-			System.out.println(scanner.line);
+			System.out.print(scanner.line);
 			for (int i=1; i<scanner.position; i++){
 				System.out.print("-");
 			}
@@ -38,7 +38,27 @@ public class Error {
 	/**
 	 * Expected a different value/token in the data
 	 */
-	public static void expected(String value){
-		abort("Expected: " + value);
+	public static void expected(String value, String matchingStatement){
+		if (matchingStatement == null)
+			abort("Expected: " + value);
+		else
+			abort("Matching statement: " + matchingStatement + "\nExpected: " + value);
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
