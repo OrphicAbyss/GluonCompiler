@@ -1,7 +1,9 @@
 package gluoncompiler;
 
+import gluoncompiler.Token.Type;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
@@ -23,6 +25,18 @@ public class GluonScanner {
 	char current;		// Lookahead character
 	boolean eof;
 
+	ArrayList<Token> tokens;
+	
+	public static void main(String[] args){
+		GluonScanner scanner = new GluonScanner(new File("testProg.txt"));
+		scanner.tokenise();
+	}
+	
+	/**
+	 * Create a scanner to read a file
+	 * 
+	 * @param file 
+	 */
 	public GluonScanner(File file){
 		try {
 			input = new Scanner(file);
@@ -32,17 +46,47 @@ public class GluonScanner {
 		}
 	}
 
+	/**
+	 * Create a scanner which reads chars off standard in
+	 */
 	public GluonScanner(){
 		input = new Scanner(System.in);
 		initVars();
 	}
 
+	/**
+	 * Setup variables
+	 */
 	private void initVars(){
 		eof = false;
 		getChar();
 		skipWhitespace();
 	}
 
+	/**
+	 * Create tokens
+	 */
+	public void tokenise(){
+		tokens = new ArrayList<>();
+		
+		while (!isEOF()){
+			if (isDigit()){
+				tokens.add(new Token(Type.LITERAL, getInteger()));
+			} else if (isAlpha()){
+				tokens.add(new Token(Type.IDENTIFIER, getIdentifier()));
+			} else {
+				if (current != '\n')
+					tokens.add(new Token(Type.UNKNOWN,"" + current));
+				getChar();
+			}
+			skipWhitespace();
+		}
+		
+		for (Token token: tokens){
+			System.out.println("Token: " + token);
+		}
+	}
+	
 	/**
 	 * Returns true when we reach the end of the file
 	 */

@@ -7,7 +7,7 @@ package gluoncompiler;
  */
 class Token {
 	enum Type { UNKNOWN, KEYWORD, IDENTIFIER, OPERATOR, LITERAL };
-	enum Keywords {};
+	enum Keywords { VAR, IF, WHILE, FOR, END };
 	enum Operator {
 		PLUS("+"), MINUS("-"), MULTIPLY("*"), DIVIDE("/");
 
@@ -35,53 +35,77 @@ class Token {
 	private String value;
 	private boolean invalid;
 
-	public Token(String value){
+	public Token(Type type, String value){
+		//incoming type should be identifier, literal or unknown
 		String upperValue = value.toUpperCase();
-		this.value = value;
-		invalid = false;
-		// Start as unknown type
-		type = Type.UNKNOWN;
-
-		// Match the string aginst keywords
-		for (Keywords key: Keywords.values()){
-			if (key.name().equals(upperValue)){
-				type = Type.KEYWORD;
-				return;
-			}
-		}
-
-		// Tokens that start with a character but don't match a keyword are identifiers
-		char first = value.charAt(0);
-		if (Character.isLetter(first)){
-			type = Type.IDENTIFIER;
-			for (int i=0; i<value.length(); i++){
-				if (!Character.isLetterOrDigit(value.charAt(i))){
-					invalid = true;
-					break;
+		
+		switch (type){
+			case IDENTIFIER:
+				// check identifiers agains keywords
+				for (Keywords key: Keywords.values()){
+					if (key.name().equals(upperValue)){
+						// Uppercase the keyword
+						this.value = upperValue;
+						this.type = Type.KEYWORD;
+						return;
+					}
 				}
-			}
-			return;
-		}
-
-		if (Character.isDigit(first)){
-			type = Type.LITERAL;
-			for (int i=0; i<value.length(); i++){
-				if (!Character.isDigit(value.charAt(i))){
-					invalid = true;
-					break;
-				}
-			}
-			return;
-		}
-
-		for (String token: Operator.tokens()){
-			if (token.equals(value)){
-				type = Type.OPERATOR;
+				// it is an identifier
+				this.type = Type.IDENTIFIER;
+				this.value = value;
 				return;
-			}
+			case LITERAL:
+				this.type = Type.LITERAL;
+				this.value = value;
+				return;
+			case UNKNOWN:
+				// test for symbol
+				this.type = Type.UNKNOWN;
+				this.value = value;
+				return;
+			default:
+				invalid = true;
+				this.type = Type.UNKNOWN;
+				break;
 		}
+		
+//
+//		// Tokens that start with a character but don't match a keyword are identifiers
+//		char first = value.charAt(0);
+//		if (Character.isLetter(first)){
+//			type = Type.IDENTIFIER;
+//			for (int i=0; i<value.length(); i++){
+//				if (!Character.isLetterOrDigit(value.charAt(i))){
+//					invalid = true;
+//					break;
+//				}
+//			}
+//			return;
+//		}
+//
+//		if (Character.isDigit(first)){
+//			type = Type.LITERAL;
+//			for (int i=0; i<value.length(); i++){
+//				if (!Character.isDigit(value.charAt(i))){
+//					invalid = true;
+//					break;
+//				}
+//			}
+//			return;
+//		}
+//
+//		for (String token: Operator.tokens()){
+//			if (token.equals(value)){
+//				type = Type.OPERATOR;
+//				return;
+//			}
+//		}
 
 		// Unknown token
 	}
 
+	@Override
+	public String toString(){
+		return type.toString() + ": " + value;
+	}
 }

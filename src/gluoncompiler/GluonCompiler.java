@@ -286,6 +286,24 @@ public class GluonCompiler {
 		output.outputLine(label + ":", false);
 	}
 	
+	static void FunctionDef(){
+		scanner.matchAndAccept('(', "Function Def");
+		int paramaters = 0;
+		// TODO: Match paramaters
+		scanner.matchAndAccept(')', "Function Def");
+		if (scanner.matchOnly(':')){
+			Error.abort("Functions currently don't support returns.");
+		}
+		// Push BP
+		// Mov BP, SP
+		// Push all reg
+		
+		// Pop all reg
+		// Pop BP
+		// Ret paramaters
+		
+	}
+	
 	/** Parse a statement */
 	static void Statement(String name){
 		switch (name.toUpperCase()){
@@ -310,7 +328,7 @@ public class GluonCompiler {
 				break;
 		}
 	}
-
+	
 	static void StatementsUntil(String identifier){
 		String currentIdentifier;
 		while (!scanner.isEOF()){
