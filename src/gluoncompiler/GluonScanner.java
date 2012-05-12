@@ -26,16 +26,16 @@ public class GluonScanner {
 	boolean eof;
 
 	ArrayList<Token> tokens;
-	
+
 	public static void main(String[] args){
 		GluonScanner scanner = new GluonScanner(new File("testProg.txt"));
 		scanner.tokenise();
 	}
-	
+
 	/**
 	 * Create a scanner to read a file
-	 * 
-	 * @param file 
+	 *
+	 * @param file
 	 */
 	public GluonScanner(File file){
 		try {
@@ -64,29 +64,44 @@ public class GluonScanner {
 	}
 
 	/**
+	 * Get the next word in the line
+	 */
+	public String getWord(){
+		StringBuilder sb = new StringBuilder();
+
+		while (!isWhitespace()){
+			sb.append(current);
+			getChar();
+		}
+
+		return sb.toString();
+	}
+
+	/**
 	 * Create tokens
 	 */
 	public void tokenise(){
 		tokens = new ArrayList<>();
-		
+
 		while (!isEOF()){
-			if (isDigit()){
-				tokens.add(new Token(Type.LITERAL, getInteger()));
-			} else if (isAlpha()){
-				tokens.add(new Token(Type.IDENTIFIER, getIdentifier()));
-			} else {
-				if (current != '\n')
-					tokens.add(new Token(Type.UNKNOWN,"" + current));
-				getChar();
+			String word = getWord();
+			if (!"".equals(word)){
+				Token.buildTokens(tokens, word);
+				if (current == '\n'){
+					tokens.add(new Token(Type.NEWLINE,""));
+
+					System.out.print("Line: " + line);
+					for (Token token: tokens){
+						System.out.println("Token: " + token);
+					}
+					System.out.println("");
+					tokens.clear();
+				}
 			}
 			skipWhitespace();
 		}
-		
-		for (Token token: tokens){
-			System.out.println("Token: " + token);
-		}
 	}
-	
+
 	/**
 	 * Returns true when we reach the end of the file
 	 */
@@ -118,10 +133,22 @@ public class GluonScanner {
 	}
 
 	/**
-	 * @return true if the current character is whitespace
+	 * Test if the character is a whitespace char.
+	 *
+	 * @param c Character to test
+	 * @return true if the character is whitespace
 	 */
 	public boolean isWhitespace(char c){
-		return c == SPACE || c == TAB;
+		return c == SPACE || c == TAB || c == '\n';
+	}
+
+	/**
+	 * Test if the current character is a whitespace char.
+	 *
+	 * @return true if the current character is whitespace
+	 */
+	public boolean isWhitespace(){
+		return isWhitespace(current);
 	}
 
 	/**

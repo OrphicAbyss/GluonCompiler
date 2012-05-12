@@ -1,35 +1,108 @@
 package gluoncompiler;
 
+import java.util.ArrayList;
+
 /**
  * Represents a token in a source file.
  *
  * Tokens can be of type: Keyword, Identifier, Operator, Literal
  */
 class Token {
-	enum Type { UNKNOWN, KEYWORD, IDENTIFIER, OPERATOR, LITERAL };
+	enum Type { UNKNOWN, KEYWORD, IDENTIFIER, OPERATOR, LITERAL, NEWLINE };
 	enum Keywords { VAR, IF, WHILE, FOR, END };
 	enum Operator {
-		PLUS("+"), MINUS("-"), MULTIPLY("*"), DIVIDE("/");
+		ASSIGN_ADD("+="),
+		ASSIGN_SUBTRACT("-="),
+		ASSIGN_MULTIPLY("*="),
+		ASSIGN_DIVIDE("/="),
+		EQUALS("=="),
+		NOT_EQUALS("!="),
+		LESS_THAN_OR_EQUALS("<="),
+		GREATER_THAN_OR_EQUALS(">="),
+		BRACKET_LEFT("("),
+		BRACKET_RIGHT(")"),
+		ASSIGN("="),
+		LESS_THAN("<"),
+		GREATER_THAN(">"),
+		ADD("+"),
+		SUBTRACT("-"),
+		MULTIPLY("*"),
+		DIVIDE("/");
 
-		String token;
+		String value;
 
-		Operator(String token){
-			this.token = token;
+		Operator(String value){
+			this.value = value;
 		}
 
-		String getToken(){
-			return token;
+		String getValue(){
+			return value;
 		}
 
 		static String []tokens(){
-			String tokens[] = {};
+			String values[] = new String[values().length];
 			int i = 0;
 			for (Operator val: values()){
-				tokens[i++] = val.getToken();
+				values[i++] = val.getValue();
 			}
-			return tokens;
+			return values;
 		}
 	};
+
+	static void buildTokens(ArrayList<Token> tokens, String word) {
+		while (!"".equals(word)){
+			int i;
+			StringBuilder token = new StringBuilder();
+			char first = word.charAt(0);
+			// Try building an identifier
+			if (Character.isLetter(first)){
+				for (i = 0; i<word.length(); i++){
+					char current = word.charAt(i);
+					if (!Character.isLetterOrDigit(current)){
+						break;
+					}
+					token.append(current);
+				}
+				if (i != 0)
+					tokens.add(new Token(Type.IDENTIFIER,token.toString()));
+				word = word.substring(i);
+				continue;
+			}
+
+			// Try building a number constant
+			if (Character.isDigit(first)){
+				for (i = 0; i<word.length(); i++){
+					char current = word.charAt(i);
+					if (!Character.isDigit(current)){
+						break;
+					}
+					token.append(current);
+				}
+				if (i != 0)
+					tokens.add(new Token(Type.LITERAL,token.toString()));
+				word = word.substring(i);
+				continue;
+			}
+
+			boolean matched = false;
+			// Try building a symbol
+			for (String testOp: Operator.tokens()) {
+				if (testOp.length() <= word.length()){
+					String testWord = word.substring(0, testOp.length());
+					if (testOp.equals(testWord)) {
+						tokens.add(new Token(Type.OPERATOR,testWord));
+						word = word.substring(testOp.length());
+						matched = true;
+						break;
+					}
+				}
+			}
+			if (!matched){
+				tokens.add(new Token(Type.UNKNOWN,word.substring(0,1)));
+				word = word.substring(1);
+			}
+		}
+	}
 
 	private Type type;
 	private String value;
@@ -38,7 +111,7 @@ class Token {
 	public Token(Type type, String value){
 		//incoming type should be identifier, literal or unknown
 		String upperValue = value.toUpperCase();
-		
+
 		switch (type){
 			case IDENTIFIER:
 				// check identifiers agains keywords
@@ -55,11 +128,12 @@ class Token {
 				this.value = value;
 				return;
 			case LITERAL:
-				this.type = Type.LITERAL;
+			case OPERATOR:
+			case NEWLINE:
+				this.type = type;
 				this.value = value;
 				return;
 			case UNKNOWN:
-				// test for symbol
 				this.type = Type.UNKNOWN;
 				this.value = value;
 				return;
@@ -68,40 +142,6 @@ class Token {
 				this.type = Type.UNKNOWN;
 				break;
 		}
-		
-//
-//		// Tokens that start with a character but don't match a keyword are identifiers
-//		char first = value.charAt(0);
-//		if (Character.isLetter(first)){
-//			type = Type.IDENTIFIER;
-//			for (int i=0; i<value.length(); i++){
-//				if (!Character.isLetterOrDigit(value.charAt(i))){
-//					invalid = true;
-//					break;
-//				}
-//			}
-//			return;
-//		}
-//
-//		if (Character.isDigit(first)){
-//			type = Type.LITERAL;
-//			for (int i=0; i<value.length(); i++){
-//				if (!Character.isDigit(value.charAt(i))){
-//					invalid = true;
-//					break;
-//				}
-//			}
-//			return;
-//		}
-//
-//		for (String token: Operator.tokens()){
-//			if (token.equals(value)){
-//				type = Type.OPERATOR;
-//				return;
-//			}
-//		}
-
-		// Unknown token
 	}
 
 	@Override
