@@ -1,6 +1,5 @@
 package gluoncompiler;
 
-import gluoncompiler.Token.Type;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -26,6 +25,7 @@ public class GluonScanner {
 	boolean eof;
 
 	ArrayList<Token> tokens;
+	int currentToken = 0;
 
 	public static void main(String[] args){
 		GluonScanner scanner = new GluonScanner(new File("testProg.txt"));
@@ -64,6 +64,29 @@ public class GluonScanner {
 	}
 
 	/**
+	 * Read character from InputStream
+	 */
+	public void getChar() {
+		try {
+			if (position >= line.length()){
+				line = input.nextLine();
+				line = line + "\n";
+				position = 0;
+				lineNumber++;
+
+				// only a period on a line means eof
+				if (".\n".equals(line))
+					eof = true;
+			}
+
+			current = line.charAt(position);
+			position++;
+		} catch (NoSuchElementException nsee){
+			eof = true;
+		}
+	}
+
+	/**
 	 * Get the next word in the line
 	 */
 	public String getWord(){
@@ -88,7 +111,7 @@ public class GluonScanner {
 			if (!"".equals(word)){
 				Token.buildTokens(tokens, word);
 				if (current == '\n'){
-					tokens.add(new Token(Type.NEWLINE,""));
+					tokens.add(Token.createNewlineToken());
 
 					System.out.print("Line: " + line);
 					for (Token token: tokens){
@@ -103,33 +126,20 @@ public class GluonScanner {
 	}
 
 	/**
+	 * Get the next token in the list of tokens
+	 */
+	public Token getNextToken(){
+		if (tokens.size() <= currentToken){
+			return null;
+		}
+		return tokens.get(currentToken++);
+	}
+
+	/**
 	 * Returns true when we reach the end of the file
 	 */
 	public boolean isEOF(){
 		return eof;
-	}
-
-	/**
-	 * Read character from InputStream
-	 */
-	public void getChar() {
-		try {
-			if (position >= line.length()){
-				line = input.nextLine();
-				line = line + "\n";
-				position = 0;
-				lineNumber++;
-
-				// only a period on a line means eof
-				if (".\n".equals(line))
-					eof = true;
-			}
-
-			current = line.charAt(position);
-			position++;
-		} catch (NoSuchElementException nsee){
-			eof = true;
-		}
 	}
 
 	/**
