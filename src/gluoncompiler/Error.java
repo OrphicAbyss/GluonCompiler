@@ -35,6 +35,36 @@ public class Error {
 		System.exit(1);
 	}
 
+	public static void expected(TokenType type, Token found, String inStatement){
+		abort("Statement: " + inStatement + "\nExpected token type: " + type.toString() + "\nFound token: " + found.toString());
+	}
+
+	public static void expected(Operator operator, Token found, String inStatement){
+		abort("Statement: " + inStatement + "\nExpected operator: " + operator.name() + "\nFound token: " + found.toString());
+	}
+
+	public static void expected(TokenType[] types, Token found, String inStatement){
+		StringBuilder sb = new StringBuilder();
+		sb.append("Statement: ");
+		sb.append(inStatement);
+		sb.append("\n");
+
+		sb.append("Expected token types: ");
+		boolean first = true;
+		for (TokenType type: types){
+			if (!first)
+				sb.append(", ");
+			sb.append(type);
+			first = false;
+		}
+		sb.append("\n");
+
+		sb.append("Found token: ");
+		sb.append(found.toString());
+
+		abort(sb.toString());
+	}
+
 	/**
 	 * Expected a different value/token in the data
 	 */

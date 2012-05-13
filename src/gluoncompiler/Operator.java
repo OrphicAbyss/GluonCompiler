@@ -3,7 +3,7 @@ package gluoncompiler;
 /**
  * Operators for language
  */
- enum Operator {
+ public enum Operator {
 	ASSIGN_ADD("+="),
 	ASSIGN_SUBTRACT("-="),
 	ASSIGN_MULTIPLY("*="),
@@ -20,7 +20,9 @@ package gluoncompiler;
 	ADD("+"),
 	SUBTRACT("-"),
 	MULTIPLY("*"),
-	DIVIDE("/");
+	DIVIDE("/"),
+	COLON(":"),
+	SEMICOLON(";");
 
 	String value;
 

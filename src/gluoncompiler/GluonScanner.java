@@ -112,27 +112,71 @@ public class GluonScanner {
 				Token.buildTokens(tokens, word);
 				if (current == '\n'){
 					tokens.add(Token.createNewlineToken());
-
-					System.out.print("Line: " + line);
-					for (Token token: tokens){
-						System.out.println("Token: " + token);
-					}
-					System.out.println("");
-					tokens.clear();
 				}
 			}
 			skipWhitespace();
 		}
+		tokens.add(Token.createEOFToken());
 	}
 
 	/**
-	 * Get the next token in the list of tokens
+	 * Get the current token in the list of tokens
 	 */
-	public Token getNextToken(){
+	public Token getCurrentToken(){
 		if (tokens.size() <= currentToken){
 			return null;
 		}
-		return tokens.get(currentToken++);
+		return tokens.get(currentToken);
+	}
+
+	public Operator getCurrentOperator(){
+		return getCurrentToken().getOperator();
+	}
+
+	/**
+	 * Advance in our list of tokens
+	 */
+	public void nextToken(){
+		currentToken++;
+	}
+
+	/**
+	 * Error if a token type doesn't match the expected type.
+	 */
+	public void matchTokenType(TokenType expected, String statementType){
+		if (getCurrentToken().getType().equals(expected))
+			Error.expected(expected, getCurrentToken(), statementType);
+	}
+
+	public void matchOperator(Operator expected, String statementType){
+		if (expected.equals(getCurrentToken().getOperator()))
+			Error.expected(expected, getCurrentToken(), statementType);
+		nextToken();
+	}
+
+	public void matchNewline(String statementType){
+		matchTokenType(TokenType.NEWLINE, statementType);
+		nextToken();
+	}
+
+	public boolean testTokenType(TokenType expected){
+		return getCurrentToken().getType().equals(expected);
+	}
+
+	public boolean testOperator(Operator expected){
+		return getCurrentToken().getOperator().equals(expected);
+	}
+
+	public boolean testOperators(Operator[] expected){
+		boolean result = false;
+		for (Operator op: expected){
+			result = result || testOperator(op);
+		}
+		return result;
+	}
+
+	public boolean testEOF(){
+		return testTokenType(TokenType.EOF);
 	}
 
 	/**

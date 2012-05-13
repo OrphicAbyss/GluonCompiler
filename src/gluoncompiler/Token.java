@@ -40,6 +40,10 @@ public class Token {
 		return new Token(TokenType.NEWLINE,"");
 	}
 
+	public static Token createEOFToken(){
+		return new Token(TokenType.EOF,"");
+	}
+
 	private static String matchIdentifier(ArrayList tokens, String word){
 		StringBuilder token = new StringBuilder();
 		int i=0;
@@ -55,9 +59,9 @@ public class Token {
 		if (i != 0) {
 			Keyword key = testForKeyword(token.toString());
 			if (key != null)
-				tokens.add(new Token(TokenType.KEYWORD, key.toString()));
+				tokens.add(new Token(key));
 			else
-				tokens.add(new Token(TokenType.IDENTIFIER,token.toString()));
+				tokens.add(new Token(TokenType.IDENTIFIER, token.toString()));
 		}
 
 		return word.substring(i);
@@ -101,7 +105,7 @@ public class Token {
 			if (testOpLen <= word.length()){
 				String testWord = word.substring(0, testOpLen);
 				if (testOpStr.equals(testWord)) {
-					tokens.add(new Token(TokenType.OPERATOR,testWord));
+					tokens.add(new Token(testOp));
 					word = word.substring(testOpLen);
 					break;
 				}
@@ -113,22 +117,55 @@ public class Token {
 
 	private TokenType type;
 	private String value;
+	private Keyword keyword;
+	private Operator operator;
 
 	public Token(TokenType type, String value){
 		switch (type){
 			case IDENTIFIER:
 			case KEYWORD:
 			case LITERAL:
-			case OPERATOR:
 			case NEWLINE:
 			case UNKNOWN:
 				this.type = type;
 				this.value = value;
+				this.keyword = null;
+				this.operator = null;
 				return;
 			default:
-				this.type = TokenType.UNKNOWN;
+				Error.abort("Unknown TokenType for creating token: " + type.name() + " With value: " + value);
 				break;
 		}
+	}
+
+	public Token(Keyword keyword){
+		this.type = TokenType.KEYWORD;
+		this.value = keyword.name();
+		this.keyword = keyword;
+		this.operator = null;
+	}
+
+	public Token(Operator operator){
+		this.type = TokenType.OPERATOR;
+		this.value = operator.name();
+		this.operator = operator;
+		this.keyword = null;
+	}
+
+	public boolean isIdentifier(){
+		return type.equals(TokenType.IDENTIFIER);
+	}
+
+	public boolean isKeyword(){
+		return type.equals(TokenType.KEYWORD);
+	}
+
+	public boolean isOperator(){
+		return type.equals(TokenType.OPERATOR);
+	}
+
+	public boolean isLiteral(){
+		return type.equals(TokenType.LITERAL);
 	}
 
 	@Override
@@ -148,5 +185,19 @@ public class Token {
 	 */
 	public String getValue() {
 		return value;
+	}
+
+	/**
+	 * @return the keyword
+	 */
+	public Keyword getKeyword() {
+		return keyword;
+	}
+
+	/**
+	 * @return the operator
+	 */
+	public Operator getOperator() {
+		return operator;
 	}
 }

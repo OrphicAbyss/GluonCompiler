@@ -3,6 +3,6 @@ package gluoncompiler;
 /**
  * Keywords for language
  */
- enum Keyword {
-	VAR, IF, WHILE, FOR, END
+ public enum Keyword {
+	VAR, IF, WHILE, FOR, END;
 }
