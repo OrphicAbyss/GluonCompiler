@@ -16,6 +16,23 @@ public class GluonOutput {
 		else
 			output.append(String.format("%s\n",codeLine));
 	}
+	
+	public void code(String code){
+		output.append("\t");
+		output.append(code);
+		output.append("\n");
+	}
+	
+	public void comment(String comment){
+		output.append(";");
+		output.append(comment);
+		output.append("\n");
+	}
+	
+	public void label(String label){
+		output.append(label);
+		output.append(":\n");
+	}
 
 	public String getOutput(){
 		return output.toString();

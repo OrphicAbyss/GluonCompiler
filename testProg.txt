@@ -7,7 +7,7 @@ end
 var count=1
 while (count<30)
    count += 1
-   if (count >20)
+   if (count >= 20)
       break
    end
 end

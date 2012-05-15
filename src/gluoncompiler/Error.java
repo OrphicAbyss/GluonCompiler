@@ -39,15 +39,31 @@ public class Error {
 		abort("Statement: " + inStatement + "\nExpected token type: " + type.toString() + "\nFound token: " + found.toString());
 	}
 
+	private static void printStatement(StringBuilder sb, String inStatement){
+		if (inStatement != null){
+			sb.append("Statement: ");
+			sb.append(inStatement);
+			sb.append("\n");			
+		}		
+	}
+	
 	public static void expected(Operator operator, Token found, String inStatement){
-		abort("Statement: " + inStatement + "\nExpected operator: " + operator.name() + "\nFound token: " + found.toString());
+		StringBuilder sb = new StringBuilder();
+		printStatement(sb, inStatement);
+		
+		sb.append("Expected operator: ");
+		sb.append(operator.name());
+		sb.append("\n");
+		
+		sb.append("Found token: ");
+		sb.append(found.toString());
+		
+		abort(sb.toString());
 	}
 
 	public static void expected(TokenType[] types, Token found, String inStatement){
 		StringBuilder sb = new StringBuilder();
-		sb.append("Statement: ");
-		sb.append(inStatement);
-		sb.append("\n");
+		printStatement(sb, inStatement);
 
 		sb.append("Expected token types: ");
 		boolean first = true;

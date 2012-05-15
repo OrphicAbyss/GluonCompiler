@@ -6,34 +6,34 @@ import java.io.File;
  * Simple compiler for language code named 'Gluon'
  *
  * TODO: add functions
- * TODO: better token scanning
  * TODO: add classes
  * TODO: add strings
  * TODO: add arrays
  */
 public class GluonCompiler {
+	static Tokeniser tokeniser;
 	static GluonScanner scanner;
 	static GluonOutput output;
 
 	/** Parse and Translate Parentheses */
 	static void Parentheses() {
-		scanner.matchOperator(Operator.BRACKET_LEFT, null);
-		Expression();
-		scanner.matchOperator(Operator.BRACKET_RIGHT, null);
+		tokeniser.matchOperator(Operator.BRACKET_LEFT, null);
+		BooleanExpression();
+		tokeniser.matchOperator(Operator.BRACKET_RIGHT, null);
 	}
 
 	/** Parse and Translate a Function */
 	static void Function(Token token){
-		scanner.matchOperator(Operator.BRACKET_LEFT, "Function Call");
-		scanner.matchOperator(Operator.BRACKET_RIGHT, "Function Call");
+		tokeniser.matchOperator(Operator.BRACKET_LEFT, "Function Call");
+		tokeniser.matchOperator(Operator.BRACKET_RIGHT, "Function Call");
 		output.outputLine("CALL " + token.getValue(), true);
 	}
 
 	/** Parse and Translate a Function or Variable */
 	static void Ident() {
-		Token token = scanner.getCurrentToken();
-		scanner.nextToken();
-		if (scanner.testOperator(Operator.BRACKET_LEFT)){
+		Token token = tokeniser.getCurrentToken();
+		tokeniser.nextToken();
+		if (tokeniser.testOperator(Operator.BRACKET_LEFT)){
 			Function(token);
 		} else {
 			GluonVariable.testVariableRegistered(token.getValue());
@@ -43,46 +43,48 @@ public class GluonCompiler {
 
 	/** Parse and Translate a Constant or Variable */
 	static void ConstantOrVariable() {
-		TokenType type = scanner.getCurrentToken().getType();
+		TokenType type = tokeniser.getCurrentToken().getType();
 		switch (type){
 			case IDENTIFIER:
 				Ident();
 				break;
 			case LITERAL:
-				output.outputLine("MOV EAX, " + scanner.getInteger(), true);
+				output.outputLine("MOV EAX, " + tokeniser.getCurrentToken().getValue(), true);
+				tokeniser.nextToken();
 				break;
 			default:
 				TokenType[] expected = { TokenType.IDENTIFIER, TokenType.LITERAL };
-				Error.expected(expected, scanner.getCurrentToken(), "Constant Or Variable");
+				Error.expected(expected, tokeniser.getCurrentToken(), "Constant Or Variable");
 		}
 	}
 
 	/** Parse and Translate a Unary Minus */
 	static void UnaryMinus() {
-		scanner.matchOperator(Operator.SUBTRACT, "Unary Minus");
+		tokeniser.matchOperator(Operator.SUBTRACT, "Unary Minus");
 		ConstantOrVariable();
 		output.outputLine("NEG EAX", true);
 	}
 
 	/** Parse and Translate a Math Factor */
 	static void Factor() {
-		Operator oper = scanner.getCurrentToken().getOperator();
-		switch (oper){
-			case BRACKET_LEFT:
-				Parentheses();
-				break;
-			case SUBTRACT:
-				UnaryMinus();
-				break;
-			default:
-				ConstantOrVariable();
-				break;
+		Operator oper = tokeniser.getCurrentToken().getOperator();
+		if (oper != null){
+			switch (oper){
+				case BRACKET_LEFT:
+					Parentheses();
+					break;
+				case SUBTRACT:
+					UnaryMinus();
+					break;
+			}
+		} else {
+			ConstantOrVariable();
 		}
 	}
 
 	/** Parse and Translate a Multiply */
 	static void Multiply() {
-		scanner.matchOperator(Operator.MULTIPLY, "Multiplication");
+		tokeniser.matchOperator(Operator.MULTIPLY, "Multiplication");
 		Factor();
 		output.outputLine("POP EBX", true);
 		output.outputLine("IMUL EAX,EBX", true);
@@ -90,7 +92,7 @@ public class GluonCompiler {
 
 	/** Parse and Translate a Divide */
 	static void Divide() {
-		scanner.matchOperator(Operator.DIVIDE, "Division");
+		tokeniser.matchOperator(Operator.DIVIDE, "Division");
 		Factor();
 		output.outputLine("MOV EBX, EAX", true);
 		output.outputLine("MOV EDX, 0", true);
@@ -101,10 +103,10 @@ public class GluonCompiler {
 	/** Parse and Translate a Math Term */
 	static void Term() {
 		Factor();
-		while (scanner.testOperator(Operator.MULTIPLY)
-				|| scanner.testOperator(Operator.DIVIDE)) {
+		while (tokeniser.testOperator(Operator.MULTIPLY)
+				|| tokeniser.testOperator(Operator.DIVIDE)) {
 			output.outputLine("PUSH EAX", true);
-			switch (scanner.getCurrentOperator()) {
+			switch (tokeniser.getCurrentOperator()) {
 				case MULTIPLY:
 					Multiply();
 					break;
@@ -117,7 +119,7 @@ public class GluonCompiler {
 
 	/** Parse and Translate an Add */
 	static void Add() {
-		scanner.matchOperator(Operator.ADD, "Addition");
+		tokeniser.matchOperator(Operator.ADD, "Addition");
 		Term();
 		output.outputLine("POP EBX",true);
 		output.outputLine("ADD EAX,EBX", true);
@@ -125,7 +127,7 @@ public class GluonCompiler {
 
 	/** Parse and Translate a Subtract */
 	static void Subtract() {
-		scanner.matchOperator(Operator.SUBTRACT, "Subtraction");
+		tokeniser.matchOperator(Operator.SUBTRACT, "Subtraction");
 		Term();
 		output.outputLine("POP EBX", true);
 		output.outputLine("SUB EAX,EBX", true);
@@ -135,10 +137,10 @@ public class GluonCompiler {
 	/** Parse and Translate a Math Expression */
 	static void Expression() {
 		Term();
-		while (scanner.testOperator(Operator.ADD)
-			|| scanner.testOperator(Operator.SUBTRACT)) {
+		while (tokeniser.testOperator(Operator.ADD)
+			|| tokeniser.testOperator(Operator.SUBTRACT)) {
 			output.outputLine("PUSH EAX", true);
-			switch (scanner.getCurrentOperator()) {
+			switch (tokeniser.getCurrentOperator()) {
 				case ADD:
 					Add();
 					break;
@@ -153,42 +155,43 @@ public class GluonCompiler {
 	static void BooleanExpression() {
 		Expression();
 
-		String testExp = null;
-
-		switch (scanner.getCurrentOperator()){
-			case EQUALS:
-				scanner.matchOperator(Operator.EQUALS, "Boolean Expression");
-				testExp = "SETE AL";
-				break;
-			case LESS_THAN:
-				scanner.matchOperator(Operator.LESS_THAN, "Boolean Expression");
-				testExp = "SETLE AL";
-				break;
-			case LESS_THAN_OR_EQUALS:
-				scanner.matchOperator(Operator.LESS_THAN_OR_EQUALS,"Boolean Expression");
-				testExp = "SETL AL";
-				break;
-			case GREATER_THAN:
-				scanner.matchOperator(Operator.GREATER_THAN, "Boolean Expression");
-				testExp = "SETGE AL";
-				break;
-			case GREATER_THAN_OR_EQUALS:
-				scanner.matchOperator(Operator.GREATER_THAN_OR_EQUALS, "Boolean Expression");
-				testExp = "SETG AL";
-				break;
-			case NOT_EQUALS:
-				scanner.matchOperator(Operator.NOT_EQUALS, "Boolean Expression");
-				testExp = "SETNE AL";
-				break;
-			default:
-				return;
+		if (tokeniser.getCurrentToken().isOperator()){
+			String testExp;
+			switch (tokeniser.getCurrentOperator()){
+				case EQUALS:
+					tokeniser.nextToken();
+					testExp = "SETE AL";
+					break;
+				case LESS_THAN:
+					tokeniser.nextToken();
+					testExp = "SETG AL";
+					break;
+				case LESS_THAN_OR_EQUALS:
+					tokeniser.nextToken();
+					testExp = "SETGE AL";
+					break;
+				case GREATER_THAN:
+					tokeniser.nextToken();
+					testExp = "SETL AL";
+					break;
+				case GREATER_THAN_OR_EQUALS:
+					tokeniser.nextToken();
+					testExp = "SETLE AL";
+					break;
+				case NOT_EQUALS:
+					tokeniser.nextToken();
+					testExp = "SETNE AL";
+					break;
+				default:
+					return;
+			}
+			output.outputLine("PUSH EAX", true);
+			Expression();
+			output.outputLine("POP EBX", true);
+			output.outputLine("CMP EAX, EBX", true);
+			output.outputLine(testExp, true);
 		}
 
-		output.outputLine("PUSH EAX", true);
-		Expression();
-		output.outputLine("POP EBX", true);
-		output.outputLine("CMP EAX, EBX", true);
-		output.outputLine(testExp, true);
 	}
 
 	/** Parse and Translate an Assignment Statement */
@@ -196,35 +199,35 @@ public class GluonCompiler {
 		String name = token.getValue();
 		GluonVariable.testVariableRegistered(name);
 
-		switch (scanner.getCurrentOperator()){
+		switch (tokeniser.getCurrentOperator()){
 			case ASSIGN:
-				scanner.nextToken();
+				tokeniser.nextToken();
 				BooleanExpression();
 				output.outputLine("MOV [" + GluonLibrary.varToLabel(name) + "],EAX", true);
 				break;
 			case ASSIGN_ADD:
-				scanner.nextToken();
+				tokeniser.nextToken();
 				BooleanExpression();
 				output.outputLine("MOV EBX,[" + GluonLibrary.varToLabel(name) + "]", true);
 				output.outputLine("ADD EAX,EBX", true);
 				output.outputLine("MOV [" + GluonLibrary.varToLabel(name) + "],EAX", true);
 				break;
 			case ASSIGN_SUBTRACT:
-				scanner.nextToken();
+				tokeniser.nextToken();
 				BooleanExpression();
 				output.outputLine("MOV EBX,[" + GluonLibrary.varToLabel(name) + "]", true);
 				output.outputLine("SUB EBX,EAX", true);
 				output.outputLine("MOV [" + GluonLibrary.varToLabel(name) + "],EBX", true);
 				break;
 			case ASSIGN_MULTIPLY:
-				scanner.nextToken();
+				tokeniser.nextToken();
 				BooleanExpression();
 				output.outputLine("MOV EBX,[" + GluonLibrary.varToLabel(name) + "]", true);
 				output.outputLine("IMUL EAX,EBX", true);
 				output.outputLine("MOV [" + GluonLibrary.varToLabel(name) + "],EBX", true);
 				break;
 			case ASSIGN_DIVIDE:
-				scanner.nextToken();
+				tokeniser.nextToken();
 				BooleanExpression();
 				output.outputLine("MOV EBX, EAX", true);
 				output.outputLine("MOV EDX, 0", true);
@@ -237,78 +240,95 @@ public class GluonCompiler {
 
 	/** Parse a variable declaration */
 	static void DefineVariable(){
-		Token varName = scanner.getCurrentToken();
+		Token varName = tokeniser.getCurrentToken();
 		String name = varName.getValue();
 		GluonVariable.registerVariable(name);
-		scanner.nextToken();
+		tokeniser.nextToken();
 		Operator[] ops = {Operator.ASSIGN, Operator.ASSIGN_ADD, Operator.ASSIGN_SUBTRACT, Operator.ASSIGN_MULTIPLY, Operator.DIVIDE};
 
-		if (scanner.testOperators(ops)){
+		if (tokeniser.testOperators(ops)){
 			Assignment(varName);
 		}
 	}
 
 	/** Parse and Translate a While Statement */
 	static void WhileStatement(){
-		String labelStart = "while_on_line_" + scanner.lineNumber + "_start";
-		String labelEnd = "while_on_line_" + scanner.lineNumber + "_end";
+		output.comment("While Statement");
+		Token cur = tokeniser.getPreviousToken();
+		String labelStart = GluonLabels.createLabel(cur, "start");
+		String labelEnd = GluonLabels.createLabel(cur, "end");
+		GluonLabels.addEndLabel(labelEnd);
 		output.outputLine(labelStart + ":", false);
 		BooleanExpression();
-		scanner.matchNewline("While Statement");
+		tokeniser.matchNewline("While Statement");
 		output.outputLine("TEST EAX, EAX", true);
-		output.outputLine("JNZ " + labelEnd, true);
-		StatementsUntil("END");
+		output.outputLine("JZ " + labelEnd, true);
+		StatementsUntil(Keyword.END);
 		output.outputLine("JMP " + labelStart, true);
 		output.outputLine(labelEnd + ":", false);
+		GluonLabels.removeEndLabel(labelEnd);
 	}
 
 	/** Parse and Translate a For Statement */
 	static void ForStatement(){
-		String labelStart = "for_on_line_" + scanner.lineNumber + "_start";
-		String labelTest = "for_on_line_" + scanner.lineNumber + "_test";
-		String labelInc = "for_on_line_" + scanner.lineNumber + "_inc";
-		String labelEnd = "for_on_line_" + scanner.lineNumber + "_end";
-
+		output.comment("For Statememt");
+		Token cur = tokeniser.getPreviousToken();
+		String labelStart = GluonLabels.createLabel(cur, "start");
+		String labelTest = GluonLabels.createLabel(cur, "test");
+		String labelInc = GluonLabels.createLabel(cur, "inc");
+		String labelEnd = GluonLabels.createLabel(cur, "end");
+		GluonLabels.addEndLabel(labelEnd);
 		// first assignment
-		if (!scanner.matchOnly(':'))
-			Assignment(scanner.getCurrentToken());
-		scanner.matchOperator(Operator.COLON, "For Statement");
+		if (!tokeniser.testOperator(Operator.COLON))
+			Assignment(tokeniser.getCurrentToken());
+		tokeniser.matchOperator(Operator.COLON, "For Statement");
 		// loop test
 		output.outputLine(labelTest + ":", false);
 		BooleanExpression();
-		scanner.matchOperator(Operator.COLON, "For Statement");
+		tokeniser.matchOperator(Operator.COLON, "For Statement");
 		output.outputLine("TEST EAX, EAX", true);
 		output.outputLine("JNZ " + labelEnd, true);
 		output.outputLine("JMP " + labelStart, true);
 		// inc statement
 		output.outputLine(labelInc + ":", false);
-		Assignment(scanner.getCurrentToken());
+		Assignment(tokeniser.getCurrentToken());
 		output.outputLine("JMP " + labelTest, true);
 		// loop code
 		output.outputLine(labelStart + ":", false);
-		scanner.matchAndAccept('\n', "For Statement");
-		StatementsUntil("END");
+		tokeniser.matchNewline("For Statement");
+		StatementsUntil(Keyword.END);
 		output.outputLine("JMP " + labelInc, false);
 		output.outputLine(labelEnd + ":", false);
+		
+		GluonLabels.removeEndLabel(labelEnd);
 	}
 
+	static void BreakStatement(){
+		output.comment("Break");
+		String label = GluonLabels.getEndLabel();
+		output.code("JMP " + label);
+	}
+	
 	/** Parse and Translate an If Statement */
 	static void IfStatement(){
+		output.comment("If Statement");
+		Token cur = tokeniser.getPreviousToken();
+		String label = GluonLabels.createLabel(cur, "end");
 		BooleanExpression();
-		String label = "if_on_ln_" + scanner.lineNumber;
 		output.outputLine("TEST EAX, EAX", true);
 		output.outputLine("JZ " + label, true);
-		scanner.matchNewline("If Statement");
-		StatementsUntil("END");
+		tokeniser.matchNewline("If Statement");
+		StatementsUntil(Keyword.END);
 		output.outputLine(label + ":", false);
 	}
 
 	static void FunctionDef(){
-		scanner.matchOperator(Operator.BRACKET_LEFT, "Function Def");
+		tokeniser.matchOperator(Operator.BRACKET_LEFT, "Function Def");
 		int paramaters = 0;
 		// TODO: Match paramaters
-		scanner.matchOperator(Operator.BRACKET_RIGHT, "Function Def");
-		if (scanner.matchOnly(':')){
+		tokeniser.matchOperator(Operator.BRACKET_RIGHT, "Function Def");
+		if (tokeniser.testOperator(Operator.COLON)){
+			tokeniser.nextToken();
 			Error.abort("Functions currently don't support returns.");
 		}
 		// Push BP
@@ -323,30 +343,31 @@ public class GluonCompiler {
 
 	/** Parse a statement */
 	static void Statement(Token token){
+		tokeniser.nextToken();
 		switch (token.getType()){
 			case KEYWORD:
 				switch (token.getKeyword()){
 					case VAR:
-						scanner.nextToken();
 						DefineVariable();
 						break;
 					case IF:
-						scanner.nextToken();
 						IfStatement();
 						break;
 					case FOR:
-						scanner.nextToken();
 						ForStatement();
 						break;
 					case WHILE:
-						scanner.nextToken();
 						WhileStatement();
+						break;
+					case BREAK:
+						BreakStatement();
+						break;
 					default:
 						Error.abort("Unexpected keyword found: " + token.getKeyword().name() + " when parsing Statement.");
 				}
 				break;
 			case IDENTIFIER:
-				if (scanner.testOperator(Operator.BRACKET_LEFT)){
+				if (tokeniser.testOperator(Operator.BRACKET_LEFT)){
 					Function(token);
 				} else {
 					Assignment(token);
@@ -358,21 +379,26 @@ public class GluonCompiler {
 		}
 	}
 
-	static void StatementsUntil(String identifier){
-		while (!scanner.testEOF()){
-			Token currentToken = scanner.getCurrentToken();
-			if (identifier.equals(currentToken.getValue()))
+	static void StatementsUntil(Keyword end){
+		while (!tokeniser.testEOF()){
+			Token currentToken = tokeniser.getCurrentToken();
+			
+			if (tokeniser.testKeyword(end)){
+				tokeniser.nextToken();
 				break;
+			}
+			
 			Statement(currentToken);
 
-			scanner.matchNewline("Statements");
+			tokeniser.matchNewline("Statements");
 		}
 	}
 
 	/** Main code compiling */
 	static void Init() {
-		scanner.tokenise();
-
+		tokeniser = new Tokeniser(scanner);
+		tokeniser.tokenise();
+		
 		Error.init(scanner);
 		GluonVariable.init();
 
@@ -380,7 +406,7 @@ public class GluonCompiler {
 		GluonLibrary.printASMStart(output);
 
 		// Match statements until the end of file
-		StatementsUntil("");
+		StatementsUntil(null);
 
 		GluonLibrary.printASMEnd(output);
 		GluonLibrary.printVariables(output, GluonVariable.getVariables());
