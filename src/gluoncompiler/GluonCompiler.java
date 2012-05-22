@@ -1,5 +1,6 @@
 package gluoncompiler;
 
+import gluoncompiler.syntax.*;
 import java.io.File;
 
 /**
@@ -11,46 +12,48 @@ import java.io.File;
  * TODO: add arrays
  */
 public class GluonCompiler {
-	static Tokeniser tokeniser;
 	static GluonScanner scanner;
+	static Tokeniser tokeniser;
+	static SyntaxBuilder syntaxBuilder;
 	static GluonOutput output;
 
 	/** Parse and Translate Parentheses */
-	static void Parentheses() {
+	public static void Parentheses() {
 		tokeniser.matchOperator(Operator.BRACKET_LEFT, null);
 		BooleanExpression();
 		tokeniser.matchOperator(Operator.BRACKET_RIGHT, null);
 	}
 
 	/** Parse and Translate a Function */
-	static void Function(Token token){
-		tokeniser.matchOperator(Operator.BRACKET_LEFT, "Function Call");
-		tokeniser.matchOperator(Operator.BRACKET_RIGHT, "Function Call");
-		output.code("CALL " + token.getValue());
+	public static void Function(Token token){
+		SyntaxObject func = new FunctionCall(tokeniser, token);
+		output.code(func.emitCode());
 	}
 
 	/** Parse and Translate a Function or Variable */
-	static void Ident() {
+	public static void Ident() {
 		Token token = tokeniser.getCurrentToken();
 		tokeniser.nextToken();
 		if (tokeniser.testOperator(Operator.BRACKET_LEFT)){
 			Function(token);
 		} else {
-			GluonVariable.testVariableRegistered(token.getValue());
-			output.code("MOV EAX, [" + GluonLibrary.varToLabel(token.getValue()) + "]");
+			// Variable value
+			SyntaxObject variable = new Variable(token);
+			output.code("MOV EAX, [" + variable.emitCode() + "]");
 		}
 	}
 
 	/** Parse and Translate a Constant or Variable */
-	static void ConstantOrVariable() {
+	public static void ConstantOrVariable() {
 		TokenType type = tokeniser.getCurrentToken().getType();
 		switch (type){
 			case IDENTIFIER:
 				Ident();
 				break;
 			case LITERAL:
-				output.code("MOV EAX, " + tokeniser.getCurrentToken().getValue());
+				SyntaxObject constant = new LiteralNumber(tokeniser.getCurrentToken());
 				tokeniser.nextToken();
+				output.code("MOV EAX, " + constant.emitCode());
 				break;
 			default:
 				TokenType[] expected = { TokenType.IDENTIFIER, TokenType.LITERAL };
@@ -59,22 +62,31 @@ public class GluonCompiler {
 	}
 
 	/** Parse and Translate a Unary Minus */
-	static void UnaryMinus() {
+	public static void UnaryMinus() {
 		tokeniser.matchOperator(Operator.SUBTRACT, "Unary Minus");
 		ConstantOrVariable();
 		output.code("NEG EAX");
 	}
 
+	public static void UnaryPlus(){
+		tokeniser.matchOperator(Operator.ADD, "Unary Plus");
+		ConstantOrVariable();
+	}
+	
 	/** Parse and Translate a Math Factor */
-	static void Factor() {
-		Operator oper = tokeniser.getCurrentToken().getOperator();
-		if (oper != null){
+	public static void Factor() {
+		Token token = tokeniser.getCurrentToken();
+		if (token.isOperator()){
+			Operator oper = token.getOperator();
 			switch (oper){
 				case BRACKET_LEFT:
 					Parentheses();
 					break;
 				case SUBTRACT:
 					UnaryMinus();
+					break;
+				case ADD:
+					UnaryPlus();
 					break;
 			}
 		} else {
@@ -83,7 +95,7 @@ public class GluonCompiler {
 	}
 
 	/** Parse and Translate a Multiply */
-	static void Multiply() {
+	public static void Multiply() {
 		tokeniser.matchOperator(Operator.MULTIPLY, "Multiplication");
 		Factor();
 		output.code("POP EBX");
@@ -91,7 +103,7 @@ public class GluonCompiler {
 	}
 
 	/** Parse and Translate a Divide */
-	static void Divide() {
+	public static void Divide() {
 		tokeniser.matchOperator(Operator.DIVIDE, "Division");
 		Factor();
 		output.code("MOV EBX, EAX");
@@ -101,7 +113,7 @@ public class GluonCompiler {
 	}
 
 	/** Parse and Translate a Math Term */
-	static void Term() {
+	public static void Term() {
 		Factor();
 		while (tokeniser.testOperator(Operator.MULTIPLY)
 				|| tokeniser.testOperator(Operator.DIVIDE)) {
@@ -118,7 +130,7 @@ public class GluonCompiler {
 	}
 
 	/** Parse and Translate an Add */
-	static void Add() {
+	public static void Add() {
 		tokeniser.matchOperator(Operator.ADD, "Addition");
 		Term();
 		output.code("POP EBX");
@@ -126,7 +138,7 @@ public class GluonCompiler {
 	}
 
 	/** Parse and Translate a Subtract */
-	static void Subtract() {
+	public static void Subtract() {
 		tokeniser.matchOperator(Operator.SUBTRACT, "Subtraction");
 		Term();
 		output.code("POP EBX");
@@ -135,7 +147,7 @@ public class GluonCompiler {
 	}
 
 	/** Parse and Translate a Math Expression */
-	static void Expression() {
+	public static void Expression() {
 		Term();
 		while (tokeniser.testOperator(Operator.ADD)
 			|| tokeniser.testOperator(Operator.SUBTRACT)) {
@@ -152,7 +164,7 @@ public class GluonCompiler {
 	}
 
 	/** Parse and Translate a Boolean Expression */
-	static void BooleanExpression() {
+	public static void BooleanExpression() {
 		Expression();
 
 		if (tokeniser.getCurrentToken().isOperator()){
@@ -190,7 +202,7 @@ public class GluonCompiler {
 	}
 
 	/** Parse and Translate an Assignment Statement */
-	static void Assignment(Token token) {
+	public static void Assignment(Token token) {
 		output.comment("Assignment Statement");
 		String name = token.getValue();
 		GluonVariable.testVariableRegistered(name);
@@ -233,7 +245,7 @@ public class GluonCompiler {
 	}
 
 	/** Parse a variable declaration */
-	static void DefineVariable(){
+	public static void DefineVariable(){
 		Token varName = tokeniser.getCurrentToken();
 		String name = varName.getValue();
 		GluonVariable.registerVariable(name);
@@ -246,7 +258,7 @@ public class GluonCompiler {
 	}
 
 	/** Parse and Translate a While Statement */
-	static void WhileStatement(){
+	public static void WhileStatement(){
 		output.comment("While Statement");
 		Token cur = tokeniser.getPreviousToken();
 		String labelStart = GluonLabels.createLabel(cur, "start");
@@ -264,7 +276,7 @@ public class GluonCompiler {
 	}
 
 	/** Parse and Translate a For Statement */
-	static void ForStatement(){
+	public static void ForStatement(){
 		output.comment("For Statememt");
 		Token cur = tokeniser.getPreviousToken();
 		String labelStart = GluonLabels.createLabel(cur, "start");
@@ -297,14 +309,14 @@ public class GluonCompiler {
 		GluonLabels.removeEndLabel(labelEnd);
 	}
 
-	static void BreakStatement(){
+	public static void BreakStatement(){
 		output.comment("Break");
 		String label = GluonLabels.getEndLabel();
 		output.code("JMP " + label);
 	}
 	
 	/** Parse and Translate an If Statement */
-	static void IfStatement(){
+	public static void IfStatement(){
 		output.comment("If Statement");
 		Token cur = tokeniser.getPreviousToken();
 		String label = GluonLabels.createLabel(cur, "end");
@@ -316,7 +328,7 @@ public class GluonCompiler {
 		output.label(label);
 	}
 
-	static void FunctionDef(){
+	public static void FunctionDef(){
 		tokeniser.matchOperator(Operator.BRACKET_LEFT, "Function Def");
 		int paramaters = 0;
 		// TODO: Match paramaters
@@ -325,6 +337,8 @@ public class GluonCompiler {
 			tokeniser.nextToken();
 			Error.abort("Functions currently don't support returns.");
 		}
+		
+		
 		// Push BP
 		// Mov BP, SP
 		// Push all reg
@@ -336,7 +350,7 @@ public class GluonCompiler {
 	}
 
 	/** Parse a statement */
-	static void Statement(Token token){
+	public static void Statement(Token token){
 		tokeniser.nextToken();
 		switch (token.getType()){
 			case KEYWORD:
@@ -373,7 +387,7 @@ public class GluonCompiler {
 		}
 	}
 
-	static void StatementsUntil(Keyword end){
+	public static void StatementsUntil(Keyword end){
 		while (!tokeniser.testEOF()){
 			Token currentToken = tokeniser.getCurrentToken();
 			
@@ -389,9 +403,10 @@ public class GluonCompiler {
 	}
 
 	/** Main code compiling */
-	static void Init() {
+	public static void Init() {
 		tokeniser = new Tokeniser(scanner);
 		tokeniser.tokenise();
+		
 		
 		Error.init(scanner);
 		GluonVariable.init();
@@ -400,7 +415,7 @@ public class GluonCompiler {
 		GluonLibrary.printASMStart(output);
 
 		// Match statements until the end of file
-		StatementsUntil(null);
+		GluonCompiler.StatementsUntil(null);
 
 		GluonLibrary.printASMEnd(output);
 		GluonLibrary.printVariables(output, GluonVariable.getVariables());

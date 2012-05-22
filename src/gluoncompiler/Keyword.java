@@ -4,5 +4,5 @@ package gluoncompiler;
  * Keywords for language
  */
  public enum Keyword {
-	VAR, IF, WHILE, FOR, BREAK, END;
+	VAR, IF, ELSE, WHILE, FOR, BREAK, END;
 }

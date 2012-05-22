@@ -33,4 +33,14 @@ package gluoncompiler;
 	String getValue() {
 		return value;
 	}
+	
+	boolean isAssignment(){
+		final Operator[] assign = { ASSIGN_ADD, ASSIGN_SUBTRACT, ASSIGN_MULTIPLY, ASSIGN_DIVIDE, ASSIGN };
+
+		boolean result = false;
+		for (Operator op: assign){
+			result = result || this.equals(op);
+		}
+		return result;
+	}
 }

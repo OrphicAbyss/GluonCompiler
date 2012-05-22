@@ -6,7 +6,7 @@ import java.util.ArrayList;
 /**
  * Parses a stream of characters into a stream of tokens.
  */
-class Tokeniser {
+public class Tokeniser {
 	ArrayList<Token> tokens;
 	int currentToken;
 	GluonScanner scanner;
@@ -38,7 +38,7 @@ class Tokeniser {
 		while (!scanner.isEOF()){
 			String word = scanner.getWord();
 			if (!"".equals(word)){
-				Token.buildTokens(tokens, word, scanner.lineNumber, scanner.position);
+				tokens.addAll(Token.buildTokens(word, scanner.lineNumber, scanner.position));
 				if (scanner.current == '\n'){
 					tokens.add(Token.createNewlineToken(scanner.lineNumber, scanner.position));
 				}
@@ -46,6 +46,10 @@ class Tokeniser {
 			scanner.skipWhitespace();
 		}
 		tokens.add(Token.createEOFToken(scanner.lineNumber, scanner.position));
+		int max = tokens.size() - 1;
+		for (int i=0;i<max; i++){
+			tokens.get(i).setNext(tokens.get(i+1));
+		}
 	}
 
 	public Token getPreviousToken(){

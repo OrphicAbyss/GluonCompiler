@@ -15,28 +15,35 @@ public class Token {
 	 * @param tokens ArrayList to add tokens to
 	 * @param word The string to tokenise
 	 */
-	public static void buildTokens(ArrayList<Token> tokens, String word, int line, int position) {
+	public static ArrayList<Token> buildTokens(String word, int line, int position) {
+		ArrayList<Token> tokensOut = new ArrayList<>();
 		while (!"".equals(word)){
+			Token token;
 			int wordLen = word.length();
 
 			char first = word.charAt(0);
 			// Try building an identifier
 			if (Character.isLetter(first))
-				word = matchIdentifier(tokens, word, line, position);
+				token = matchIdentifier(word, line, position);
 			else if (Character.isDigit(first))
-				word = matchLiteral(tokens, word, line, position);
+				token = matchLiteral(word, line, position);
 			else
-				word = matchOperator(tokens, word, line, position);
+				token = matchOperator(word, line, position);
 
-			// If the word length hasn't changed (remove a char as an invalid token)
-			if (word.length() == wordLen){
-				tokens.add(new Token(TokenType.UNKNOWN,word.substring(0,1), line, -1));
+			if (token != null){
+				int size = token.getText().length();
+				word = word.substring(size);
+				position += size;
+			} else {
+				// if we didn't find a token, create an unknown token out of it
+				token = new Token(TokenType.UNKNOWN,  word.substring(0,1), line, position);
 				word = word.substring(1);
 				position++;
-			} else {
-				position += wordLen - word.length();
 			}
+			
+			tokensOut.add(token);
 		}
+		return tokensOut;
 	}
 
 	public static Token createNewlineToken(int line, int position){
@@ -47,13 +54,13 @@ public class Token {
 		return new Token(TokenType.EOF,"", line, position);
 	}
 
-	private static String matchIdentifier(ArrayList tokens, String word, int line, int position){
+	private static Token matchIdentifier(String word, int line, int position){
 		StringBuilder token = new StringBuilder();
 		int i=0;
 
 		for (; i<word.length(); i++){
 			char current = word.charAt(i);
-			if (!Character.isLetterOrDigit(current)){
+			if (!Character.isLetterOrDigit(current)){				
 				break;
 			}
 			token.append(current);
@@ -62,12 +69,12 @@ public class Token {
 		if (i != 0) {
 			Keyword key = testForKeyword(token.toString());
 			if (key != null)
-				tokens.add(new Token(key, line, position));
+				return new Token(key, line, position);
 			else
-				tokens.add(new Token(TokenType.IDENTIFIER, token.toString(), line, position));
+				return new Token(TokenType.IDENTIFIER, token.toString(), line, position);
 		}
 
-		return word.substring(i);
+		return null;
 	}
 
 	private static Keyword testForKeyword(String token){
@@ -82,7 +89,7 @@ public class Token {
 		return null;
 	}
 
-	private static String matchLiteral(ArrayList tokens, String word, int line, int position){
+	private static Token matchLiteral(String word, int line, int position){
 		StringBuilder token = new StringBuilder();
 		int i = 0;
 
@@ -95,12 +102,12 @@ public class Token {
 		}
 
 		if (i != 0)
-			tokens.add(new Token(TokenType.LITERAL,token.toString(), line, position));
+			return new Token(TokenType.LITERAL,token.toString(), line, position);
 
-		return word.substring(i);
+		return null;
 	}
 
-	private static String matchOperator(ArrayList tokens, String word, int line, int position){
+	private static Token matchOperator(String word, int line, int position){
 		// Try building a symbol
 		for (Operator testOp: Operator.values()) {
 			String testOpStr = testOp.getValue();
@@ -108,22 +115,22 @@ public class Token {
 			if (testOpLen <= word.length()){
 				String testWord = word.substring(0, testOpLen);
 				if (testOpStr.equals(testWord)) {
-					tokens.add(new Token(testOp, line, position));
-					word = word.substring(testOpLen);
-					break;
+					return new Token(testOp, line, position);
 				}
 			}
 		}
-
-		return word;
+		
+		return null;
 	}
 
 	private TokenType type;
+	private String text;
 	private String value;
 	private Keyword keyword;
 	private Operator operator;
 	private int line;
 	private int position;
+	private Token next;
 
 	public Token(TokenType type, String value, int line, int position){
 		switch (type){
@@ -134,6 +141,7 @@ public class Token {
 			case UNKNOWN:
 			case EOF:
 				this.type = type;
+				this.text = value;
 				this.value = value;
 				this.keyword = null;
 				this.operator = null;
@@ -148,6 +156,7 @@ public class Token {
 
 	public Token(Keyword keyword, int line, int position){
 		this.type = TokenType.KEYWORD;
+		this.text = keyword.name();
 		this.value = keyword.name();
 		this.keyword = keyword;
 		this.operator = null;
@@ -157,6 +166,7 @@ public class Token {
 
 	public Token(Operator operator, int line, int position){
 		this.type = TokenType.OPERATOR;
+		this.text = operator.getValue();
 		this.value = operator.name();
 		this.operator = operator;
 		this.keyword = null;
@@ -179,7 +189,15 @@ public class Token {
 	public boolean isLiteral(){
 		return type.equals(TokenType.LITERAL);
 	}
+	
+	public boolean isNewline(){
+		return type.equals(TokenType.NEWLINE);
+	}
 
+	public boolean isEOF(){
+		return type.equals(TokenType.EOF);
+	}
+	
 	@Override
 	public String toString(){
 		return getType().toString() + "(line: " + getLine() + ",pos: " + getPosition() + "): " + getValue();
@@ -225,5 +243,33 @@ public class Token {
 	 */
 	public int getPosition() {
 		return position;
+	}
+
+	/**
+	 * @return the next
+	 */
+	public Token getNext() {
+		return next;
+	}
+
+	/**
+	 * @param next the next to set
+	 */
+	public void setNext(Token next) {
+		this.next = next;
+	}
+
+	/**
+	 * @return the text
+	 */
+	public String getText() {
+		return text;
+	}
+
+	/**
+	 * @param text the text to set
+	 */
+	public void setText(String text) {
+		this.text = text;
 	}
 }
