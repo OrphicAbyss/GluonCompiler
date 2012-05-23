@@ -8,7 +8,7 @@ import gluoncompiler.Token;
  */
 class DefineVariable extends Statement {
 	
-	String name;
+	Variable variable;
 	Operator assignType;
 	SyntaxObject expression;
 	
@@ -20,7 +20,7 @@ class DefineVariable extends Statement {
 	public Token parse() {
 		Token var = first.getNext();
 		assert(var.isIdentifier());
-		name = var.getValue();
+		variable = new Variable(var);
 		
 		Token test = var.getNext();
 		if (test.isOperator()){
@@ -44,4 +44,15 @@ class DefineVariable extends Statement {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 	
+	@Override
+	public void print(int level) {
+		printLevel(level);
+		printLn("DEFINE");
+		variable.print(level + 1);
+		if (assignType != null) {
+			printLevel(level + 2);
+			printLn(assignType.name());
+			expression.print(level + 2);
+		}
+	}
 }

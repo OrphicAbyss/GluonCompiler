@@ -27,4 +27,10 @@ public class Variable extends SyntaxObject {
 	public String emitCode() {
 		return GluonLibrary.varToLabel(name);
 	}
+
+	@Override
+	public void print(int level) {
+		printLevel(level);
+		printLn("VARIABLE " + name);
+	}
 }

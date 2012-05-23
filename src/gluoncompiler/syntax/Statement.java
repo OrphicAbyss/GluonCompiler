@@ -55,5 +55,20 @@ public class Statement extends SyntaxObject {
 	public String emitCode() {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
+
+	@Override
+	public void print(int level) {
+		if (isFunctionCall){
+			System.out.println("Is function");
+		} else if (isAssignment) {
+			printLevel(level);
+			System.out.println(ident + " " + assignmentOp.name());
+			assignmentExp.print(level + 1);
+		} else {
+			printClass(level);
+			printLevel(level);
+			System.out.println("Unknown statement.");
+		}
+	}
 	
 }

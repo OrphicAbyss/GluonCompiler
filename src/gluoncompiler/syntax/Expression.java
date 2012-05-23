@@ -13,7 +13,7 @@ class Expression extends SyntaxObject {
 	ArrayList<Term> terms;
 	ArrayList<Operator> ops;
 
-	public Expression(Token next){
+	public Expression(Token next) {
 		first = next;
 		terms = new ArrayList<>();
 		ops = new ArrayList<>();
@@ -43,6 +43,16 @@ class Expression extends SyntaxObject {
 	@Override
 	public String emitCode() {
 		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public void print(int level) {
+		term.print(level);
+		for (int i=0; i<ops.size(); i++){
+			printLevel(level);
+			printLn(ops.get(i).name());
+			terms.get(i).print(level);
+		}
 	}
 	
 }

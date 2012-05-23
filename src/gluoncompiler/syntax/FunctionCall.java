@@ -28,5 +28,12 @@ public class FunctionCall extends SyntaxObject {
 	@Override
 	public String emitCode() {
 		return "CALL " + name;
-	}	
+	}
+
+	@Override
+	public void print(int level) {
+		print(level);
+		printLevel(level);
+		System.out.println(name);
+	}
 }

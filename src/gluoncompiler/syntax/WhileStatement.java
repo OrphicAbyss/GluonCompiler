@@ -36,4 +36,15 @@ class WhileStatement extends Statement {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 	
+	@Override
+	public void print(int level) {
+		printLevel(level);
+		printLn("WHILE");
+		testExp.print(level + 1);
+		
+		printLevel(level);
+		printLn("DO");
+		statements.print(level + 1);
+	}
+	
 }

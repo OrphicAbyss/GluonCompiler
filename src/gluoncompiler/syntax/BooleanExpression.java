@@ -43,5 +43,17 @@ class BooleanExpression extends SyntaxObject {
 	public String emitCode() {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
+
+	@Override
+	public void print(int level) {
+		exp1.print(level);
+		if (compare != null) {
+			printLevel(level);
+			printLn(compare.name());
+			if (exp2 != null) {
+				exp2.print(level);
+			}
+		}
+	}
 	
 }

@@ -89,4 +89,12 @@ public class StatementGroup extends SyntaxObject {
 	public String emitCode() {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
+
+	@Override
+	public void print(int level) {
+		printClass(level);
+		for (Statement stmt: children){
+			stmt.print(level + 1);
+		}
+	}
 }

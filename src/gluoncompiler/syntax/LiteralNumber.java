@@ -19,10 +19,15 @@ public class LiteralNumber extends SyntaxObject {
 	public Token parse() {
 		return token.getNext();
 	}
-
 	
 	@Override
 	public String emitCode(){
 		return value;
+	}
+
+	@Override
+	public void print(int level) {
+		printLevel(level);
+		printLn("NUMBER " + value);
 	}
 }

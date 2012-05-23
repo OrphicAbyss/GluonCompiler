@@ -21,5 +21,11 @@ public class Program extends SyntaxObject {
 	public Token parse() {
 		return child.parse();
 	}
+
+	@Override
+	public void print(int level) {
+		printClass(level);
+		child.print(level+1);
+	}
 	
 }

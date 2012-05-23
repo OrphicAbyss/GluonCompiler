@@ -26,4 +26,8 @@ class BreakStatement extends Statement {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 	
+	@Override
+	public void print(int level) {
+		printClass(level);
+	}
 }

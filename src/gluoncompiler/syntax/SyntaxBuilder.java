@@ -36,6 +36,6 @@ public class SyntaxBuilder {
 	}
 	
 	public void printTree(){
-		
+		root.print(0);
 	}
 }

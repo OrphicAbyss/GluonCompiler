@@ -12,8 +12,7 @@ class Factor extends SyntaxObject {
 	boolean unaryMinus;
 	boolean unaryPlus;
 	BooleanExpression subExpression;
-	LiteralNumber constant;
-	Variable variable;
+	SyntaxObject value;
 	
 	public Factor(Token test) {
 		first = test;
@@ -46,21 +45,36 @@ class Factor extends SyntaxObject {
 		}
 		
 		if (test.isLiteral()){
-			constant = new LiteralNumber(test);
-			test = constant.parse();
+			value = new LiteralNumber(test);
 		} else if (test.isIdentifier()){
-			variable = new Variable(test);
-			test = variable.parse();
+			value = new Variable(test);	
 		} else {
 			assert(false);
 		}
 		
+		test = value.parse();
 		return test;
 	}
 
 	@Override
 	public String emitCode() {
 		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public void print(int level) {
+		if (subExpression != null){
+			subExpression.print(level);
+		} else {
+			if (unaryMinus){
+				printLevel(level);
+				printLn("-");
+			} else if (unaryPlus){
+				printLevel(level);
+				printLn("+");
+			}
+			value.print(level);
+		}
 	}
 	
 }

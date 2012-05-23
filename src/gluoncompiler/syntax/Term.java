@@ -8,8 +8,8 @@ import java.util.ArrayList;
  * Term := Factor [ (*|/) Factor ]+
  */
 class Term extends SyntaxObject {
-	Token first;
 	
+	Token first;
 	Factor factor;
 	ArrayList<Factor> factors;
 	ArrayList<Operator> ops;
@@ -45,6 +45,16 @@ class Term extends SyntaxObject {
 	@Override
 	public String emitCode() {
 		throw new UnsupportedOperationException("Not supported yet.");
+	}
+
+	@Override
+	public void print(int level) {
+		factor.print(level);
+		for (int i=0; i<ops.size(); i++){
+			printLevel(level);
+			printLn(ops.get(i).name());
+			factors.get(i).print(level);
+		}
 	}
 	
 }

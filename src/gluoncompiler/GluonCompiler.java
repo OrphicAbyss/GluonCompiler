@@ -407,6 +407,9 @@ public class GluonCompiler {
 		tokeniser = new Tokeniser(scanner);
 		tokeniser.tokenise();
 		
+		syntaxBuilder = new SyntaxBuilder(tokeniser);
+		syntaxBuilder.buildTree();
+		
 		
 		Error.init(scanner);
 		GluonVariable.init();

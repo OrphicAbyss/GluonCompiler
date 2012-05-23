@@ -52,4 +52,20 @@ public class IfStatement extends Statement {
 		throw new UnsupportedOperationException("Not supported yet.");
 	}
 	
+	@Override
+	public void print(int level) {
+		printLevel(level);
+		printLn("IF");
+		testExpression.print(level + 1);
+		
+		printLevel(level);
+		printLn("THEN");
+		trueCondition.print(level + 1);
+		
+		if (falseCondition != null) {
+			printLevel(level);
+			printLn("ELSE");
+			falseCondition.print(level + 1);
+		}
+	}
 }
