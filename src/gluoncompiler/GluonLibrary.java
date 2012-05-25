@@ -8,6 +8,10 @@ import java.util.Collection;
  * @author DrLabman
  */
 public class GluonLibrary {
+	public static String varNameToLabel(String varName){
+		return "varname_"+varName;
+	}
+	
 	public static String varToLabel(String varName){
 		return "var_"+varName;
 	}
@@ -39,7 +43,7 @@ public class GluonLibrary {
 		output.outputLine("print_off_stack:",false);
 		output.outputLine("POP DX       ; pop a character",true);
 		output.outputLine("TEST DX,DX   ; test if it's a null char",true);
-		output.outputLine("JE num_end   ; exit if null",true);
+		output.outputLine("JZ num_end   ; exit if null",true);
 		output.outputLine("INT 21h      ; otherwise print char",true);
 		output.outputLine("JMP print_off_stack",true);
 		output.outputLine("num_end:",false);
@@ -50,6 +54,25 @@ public class GluonLibrary {
 		output.outputLine("RET",true);
 		output.outputLine(";end of print number",false);
 		output.outputLine("",false);
+		output.outputLine(";print a null terminated string, input in AX",true);
+		output.outputLine("print_string:",false);
+		output.outputLine("MOV BX, AX",true);
+		output.outputLine("MOV AH, 2",true);
+		output.outputLine("char_print_loop:",false);
+		output.outputLine("MOV DL, [BX]", true);
+		output.outputLine("INC BX",true);
+		output.outputLine("TEST DX,DX",true);
+		output.outputLine("JZ char_print_end",true);
+		output.outputLine("INT 21h",true);
+		output.outputLine("JMP char_print_loop",true);
+		output.outputLine("char_print_end:",false);
+		output.outputLine("MOV DX,0Dh   ; print CR",true);
+		output.outputLine("INT 21h",true);
+		output.outputLine("MOV DX,0Ah   ; print LF",true);
+		output.outputLine("INT 21h",true);
+		output.outputLine("RET",true);
+		output.outputLine(";end of print_string", false);
+		output.outputLine("", true);
 		output.outputLine(";start of program",false);
 		output.outputLine("start:",false);
 	}
@@ -65,6 +88,8 @@ public class GluonLibrary {
 		output.outputLine("print:", false);
 		output.outputLine("MOV BX, 10",true);
 		for (String var: variables){
+			output.outputLine("MOV AX, " + varNameToLabel(var), true);
+			output.outputLine("CALL print_string", true);
 			output.outputLine("MOV EAX, [" + varToLabel(var) + "]", true);
 			output.outputLine("CALL print_number", true);
 		}
@@ -72,6 +97,7 @@ public class GluonLibrary {
 		output.outputLine("", false);
 		output.outputLine("; data section", false);
 		for (String var: variables){
+			output.outputLine(varNameToLabel(var) + "\tdb\t\"" + var + "\",00h", true);
 			output.outputLine(varToLabel(var) + "\tdd\t?", true);
 		}
 	}

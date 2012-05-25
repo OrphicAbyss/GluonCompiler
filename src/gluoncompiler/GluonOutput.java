@@ -17,10 +17,18 @@ public class GluonOutput {
 			output.append(String.format("%s\n",codeLine));
 	}
 	
+	public static String codeLine(String code){
+		return "\t" + code + "\n";
+	}
+	
 	public void code(String code){
 		output.append("\t");
 		output.append(code);
 		output.append("\n");
+	}
+	
+	public static String commentLine(String comment){
+		return ";" + comment + "\n";
 	}
 	
 	public void comment(String comment){
@@ -29,11 +37,18 @@ public class GluonOutput {
 		output.append("\n");
 	}
 	
+	public static String labelLine(String label){
+		return label + ":\n";
+	}
+	
 	public void label(String label){
 		output.append(label);
 		output.append(":\n");
 	}
 
+	/**
+	 * @return Return the output code 
+	 */
 	public String getOutput(){
 		return output.toString();
 	}

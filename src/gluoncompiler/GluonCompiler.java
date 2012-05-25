@@ -26,7 +26,7 @@ public class GluonCompiler {
 
 	/** Parse and Translate a Function */
 	public static void Function(Token token){
-		SyntaxObject func = new FunctionCall(tokeniser, token);
+		SyntaxObject func = new FunctionCall(token);
 		output.code(func.emitCode());
 	}
 
@@ -409,7 +409,6 @@ public class GluonCompiler {
 		
 		syntaxBuilder = new SyntaxBuilder(tokeniser);
 		syntaxBuilder.buildTree();
-		
 		
 		Error.init(scanner);
 		GluonVariable.init();

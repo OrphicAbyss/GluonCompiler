@@ -1,5 +1,6 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonVariable;
 import gluoncompiler.Operator;
 import gluoncompiler.Token;
 
@@ -9,8 +10,7 @@ import gluoncompiler.Token;
 class DefineVariable extends Statement {
 	
 	Variable variable;
-	Operator assignType;
-	SyntaxObject expression;
+	AssignmentExpression assignExp;
 	
 	public DefineVariable(Token next) {
 		super(next);
@@ -24,35 +24,28 @@ class DefineVariable extends Statement {
 		
 		Token test = var.getNext();
 		if (test.isOperator()){
-			Operator testOp = test.getOperator();
-			if (Operator.ASSIGN.equals(testOp)
-				|| Operator.ASSIGN_ADD.equals(testOp)
-				|| Operator.ASSIGN_DIVIDE.equals(testOp)
-				|| Operator.ASSIGN_MULTIPLY.equals(testOp)
-				|| Operator.ASSIGN_SUBTRACT.equals(testOp)){
-				assignType = testOp;
-				test = test.getNext();
-				expression = new BooleanExpression(test);
-				test = expression.parse();
-			}
+			assignExp = new AssignmentExpression(var);
+			test = assignExp.parse();
 		}
 		return test;
 	}
 
 	@Override
 	public String emitCode() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		GluonVariable.registerVariable(variable.getName());
+		if (assignExp != null) {
+			return assignExp.emitCode();
+		}
+		return "";
 	}
 	
 	@Override
 	public void print(int level) {
 		printLevel(level);
 		printLn("DEFINE");
-		variable.print(level + 1);
-		if (assignType != null) {
-			printLevel(level + 2);
-			printLn(assignType.name());
-			expression.print(level + 2);
-		}
+		if (assignExp == null)
+			variable.print(level + 1);
+		else
+			assignExp.print(level + 1);
 	}
 }

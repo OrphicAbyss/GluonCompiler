@@ -1,8 +1,8 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Operator;
 import gluoncompiler.Token;
-import gluoncompiler.Tokeniser;
 
 /**
  * Function call identifier
@@ -10,24 +10,31 @@ import gluoncompiler.Tokeniser;
  * TODO: merge with variable into identifier
  */
 public class FunctionCall extends SyntaxObject {
+	
+	private Token first;
 	private String name;
 	
-	public FunctionCall(Tokeniser tokeniser, Token token){
-		assert(token.isIdentifier());
-		name = token.getValue();
-		tokeniser.matchOperator(Operator.BRACKET_LEFT, "Function Call");
-		tokeniser.matchOperator(Operator.BRACKET_RIGHT, "Function Call");
+	public FunctionCall(Token token){
+		first = token;
 	}
 
 	@Override
 	public Token parse() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		assert(first.isIdentifier());
+		name = first.getValue();
+		Token next = first.getNext();
+		assert(next.isOperator());
+		assert(Operator.BRACKET_LEFT.equals(next.getOperator()));
+		next = next.getNext();
+		assert(next.isOperator());
+		assert(Operator.BRACKET_RIGHT.equals(next.getOperator()));
+		
+		return next.getNext();
 	}
-
 	
 	@Override
 	public String emitCode() {
-		return "CALL " + name;
+		return GluonOutput.codeLine("CALL " + name);
 	}
 
 	@Override

@@ -6,15 +6,16 @@ import gluoncompiler.Token;
  * Represents a program
  */
 public class Program extends SyntaxObject {
+
 	StatementGroup child;
 	
-	public Program(Token start){
+	public Program(Token start) {
 		child = new StatementGroup(start);
 	}
 	
 	@Override
 	public String emitCode() {
-		return null;
+		return child.emitCode();
 	}
 
 	@Override

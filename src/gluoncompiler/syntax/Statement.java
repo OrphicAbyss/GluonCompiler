@@ -5,9 +5,9 @@ import gluoncompiler.Token;
 
 /**
  * TODO: These statements should be handled somewhere else
- * Statement Other := <Function call> | <Assignment Statement>
+ * Statement Other := <Function call> | <Assignment Expression>
  * Function Call := <Identifier>()
- * Assignment Statement := <Identifier> (=|+=|-=|*=|/=) <BooleanExpression>
+ * Assignment Expression := <Identifier> (=|+=|-=|*=|/=) <BooleanExpression>
  */
 public class Statement extends SyntaxObject {
 	Token first;
@@ -15,7 +15,8 @@ public class Statement extends SyntaxObject {
 	boolean isFunctionCall;
 	boolean isAssignment;
 	Operator assignmentOp;
-	BooleanExpression assignmentExp;
+	AssignmentExpression assignmentExp;
+	FunctionCall functionCall;
 	
 	public Statement(Token next){
 		first = next;
@@ -32,16 +33,11 @@ public class Statement extends SyntaxObject {
 			Operator testOp = test.getOperator();
 			if (Operator.BRACKET_LEFT.equals(testOp)){
 				isFunctionCall = true;
-				test = test.getNext();
-				testOp = test.getOperator();
-				assert(Operator.BRACKET_RIGHT.equals(testOp));
-				test = test.getNext();
+				functionCall = new FunctionCall(first);
+				test = functionCall.parse();
 			} else {
 				isAssignment = true;
-				assert(testOp.name().startsWith("ASSIGN"));
-				assignmentOp = testOp;
-				test = test.getNext();
-				assignmentExp = new BooleanExpression(test);
+				assignmentExp = new AssignmentExpression(first);
 				test = assignmentExp.parse();
 			}
 		} else {
@@ -53,7 +49,13 @@ public class Statement extends SyntaxObject {
 
 	@Override
 	public String emitCode() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		if (isAssignment){
+			return assignmentExp.emitCode();
+		} else if (isFunctionCall){
+			return functionCall.emitCode();
+		} else {
+			throw new RuntimeException("Emit Code: Unknown statement type.");
+		}	
 	}
 
 	@Override
@@ -61,9 +63,7 @@ public class Statement extends SyntaxObject {
 		if (isFunctionCall){
 			System.out.println("Is function");
 		} else if (isAssignment) {
-			printLevel(level);
-			System.out.println(ident + " " + assignmentOp.name());
-			assignmentExp.print(level + 1);
+			assignmentExp.print(level);
 		} else {
 			printClass(level);
 			printLevel(level);

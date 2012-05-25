@@ -1,5 +1,6 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Operator;
 import gluoncompiler.Token;
 import java.util.ArrayList;
@@ -44,7 +45,25 @@ class Term extends SyntaxObject {
 
 	@Override
 	public String emitCode() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		StringBuilder sb = new StringBuilder();
+		sb.append(factor.emitCode());
+		for (int i=0; i<factors.size(); i++) {
+			sb.append(GluonOutput.codeLine("PUSH EAX"));
+			sb.append(factors.get(i).emitCode());
+			switch (ops.get(i)) {
+				case MULTIPLY:
+					sb.append(GluonOutput.codeLine("POP EBX"));
+					sb.append(GluonOutput.codeLine("IMUL EAX,EBX"));
+					break;
+				case DIVIDE:
+					sb.append(GluonOutput.codeLine("MOV EBX, EAX"));
+					sb.append(GluonOutput.codeLine("MOV EDX, 0"));
+					sb.append(GluonOutput.codeLine("POP EAX"));
+					sb.append(GluonOutput.codeLine("IDIV EBX"));
+					break;
+			}
+		}
+		return sb.toString();
 	}
 
 	@Override

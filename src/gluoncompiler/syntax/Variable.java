@@ -1,6 +1,7 @@
 package gluoncompiler.syntax;
 
 import gluoncompiler.GluonLibrary;
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Token;
 
 /**
@@ -25,12 +26,16 @@ public class Variable extends SyntaxObject {
 	
 	@Override
 	public String emitCode() {
-		return GluonLibrary.varToLabel(name);
+		return GluonOutput.codeLine("MOV EAX, " + GluonLibrary.varToLabel(name));
 	}
 
 	@Override
 	public void print(int level) {
 		printLevel(level);
 		printLn("VARIABLE " + name);
+	}
+	
+	public String getName() {
+		return name;
 	}
 }

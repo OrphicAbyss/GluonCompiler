@@ -1,5 +1,6 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Token;
 
 /**
@@ -22,7 +23,7 @@ public class LiteralNumber extends SyntaxObject {
 	
 	@Override
 	public String emitCode(){
-		return value;
+		return GluonOutput.codeLine("MOV EAX, " + value);
 	}
 
 	@Override

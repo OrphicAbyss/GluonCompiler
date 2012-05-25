@@ -1,11 +1,14 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Operator;
 import gluoncompiler.Token;
 
 /**
- * Factor := '(' <Boolean Expression> ')' 
- *		  OR ['+'|'-'](<Variable>|<Literal>)
+ * Factor := ['+'|'-'](<Variable>|<Literal>|'('<Boolean Expression>')')
+ * 
+ * TODO: add support for more unary operators
+ * TODO: add level under for postfix operators
  */
 class Factor extends SyntaxObject {
 	Token first;
@@ -22,34 +25,42 @@ class Factor extends SyntaxObject {
 	public Token parse() {
 		Token test = first;
 		
+		// test for unary operators
 		if (test.isOperator()){
 			Operator testOp = test.getOperator();
 			switch (testOp){
 				case BRACKET_LEFT:
-					// We need to seperate the unary ops to their own level so that we can have -(10*2)
-					subExpression = new BooleanExpression(test.getNext());
-					test = subExpression.parse();
-					assert(Operator.BRACKET_RIGHT.equals(test.getOperator()));
-					return test.getNext();
+					// handle after
+					break;
 				case SUBTRACT:
 					unaryMinus = true;
+					test = test.getNext();
 					break;
 				case ADD:
 					unaryPlus = true;
+					test = test.getNext();
 					break;
 				default:
-					assert(false);
-					break;
+					throw new RuntimeException("Unknown operator: " + testOp);
 			}
-			test = test.getNext();
 		}
 		
-		if (test.isLiteral()){
+		// test for 
+		if (test.isOperator()){
+			if (Operator.BRACKET_LEFT.equals(test.getOperator())){
+				// We need to seperate the unary ops to their own level so that we can have -(10*2)
+				subExpression = new BooleanExpression(test.getNext());
+				test = subExpression.parse();
+				assert(Operator.BRACKET_RIGHT.equals(test.getOperator()));
+				return test.getNext();
+			}
+			throw new RuntimeException("Unknown operator: " + test.getOperator());
+		} else if (test.isLiteral()){
 			value = new LiteralNumber(test);
 		} else if (test.isIdentifier()){
 			value = new Variable(test);	
 		} else {
-			assert(false);
+			throw new RuntimeException("Unknown token: " + test);
 		}
 		
 		test = value.parse();
@@ -58,7 +69,19 @@ class Factor extends SyntaxObject {
 
 	@Override
 	public String emitCode() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		StringBuilder sb = new StringBuilder();
+		if (subExpression != null){
+			sb.append(subExpression.emitCode());
+		} else {
+			sb.append(value.emitCode());
+		}
+		
+		if (unaryMinus){
+			sb.append(GluonOutput.codeLine("NEG EAX"));
+		} else if (unaryPlus){
+			// do nothing
+		}
+		return sb.toString();
 	}
 
 	@Override

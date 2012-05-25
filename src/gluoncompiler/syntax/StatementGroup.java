@@ -1,5 +1,6 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Keyword;
 import gluoncompiler.Token;
 import gluoncompiler.TokenType;
@@ -87,7 +88,11 @@ public class StatementGroup extends SyntaxObject {
 	
 	@Override
 	public String emitCode() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		StringBuilder sb = new StringBuilder();
+		for (Statement stmt: children){
+			sb.append(stmt.emitCode());
+		}
+		return sb.toString();
 	}
 
 	@Override

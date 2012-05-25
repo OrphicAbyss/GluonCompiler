@@ -1,5 +1,6 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Operator;
 import gluoncompiler.Token;
 
@@ -41,7 +42,40 @@ class BooleanExpression extends SyntaxObject {
 
 	@Override
 	public String emitCode() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		if (exp2 == null)
+			return exp1.emitCode();
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append(exp1.emitCode());		
+		sb.append(GluonOutput.codeLine("PUSH EAX"));
+		sb.append(exp2.emitCode());
+		sb.append(GluonOutput.codeLine("POP EBX"));
+		sb.append(GluonOutput.codeLine("CMP EAX, EBX"));
+		
+		switch (compare){
+			case EQUALS:
+				sb.append(GluonOutput.codeLine("SETE AL"));
+				break;
+			case LESS_THAN:
+				sb.append(GluonOutput.codeLine("SETG AL"));
+				break;
+			case LESS_THAN_OR_EQUALS:
+				sb.append(GluonOutput.codeLine("SETGE AL"));
+				break;
+			case GREATER_THAN:
+				sb.append(GluonOutput.codeLine("SETL AL"));
+				break;
+			case GREATER_THAN_OR_EQUALS:
+				sb.append(GluonOutput.codeLine("SETLE AL"));
+				break;
+			case NOT_EQUALS:
+				sb.append(GluonOutput.codeLine("SETNE AL"));
+				break;
+			default:
+				throw new RuntimeException("Unknown compare type.");
+		}
+		
+		return sb.toString();
 	}
 
 	@Override

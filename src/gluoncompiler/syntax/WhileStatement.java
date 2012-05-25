@@ -1,5 +1,7 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonLabels;
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Keyword;
 import gluoncompiler.Token;
 
@@ -33,7 +35,25 @@ class WhileStatement extends Statement {
 
 	@Override
 	public String emitCode() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		// Creae labels
+		String labelStart = GluonLabels.createLabel(first, "start");
+		String labelEnd = GluonLabels.createLabel(first, "end");
+		GluonLabels.addEndLabel(labelEnd);
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append(GluonOutput.commentLine("While Statement"));
+		sb.append(GluonOutput.labelLine(labelStart));
+		sb.append(testExp.emitCode());
+		sb.append(GluonOutput.codeLine("TEST EAX, EAX"));
+		sb.append(GluonOutput.codeLine("JZ " + labelEnd));
+		sb.append(statements.emitCode());
+		sb.append(GluonOutput.codeLine("JMP " + labelStart));
+		sb.append(GluonOutput.labelLine(labelEnd));
+		sb.append(GluonOutput.commentLine("End While"));
+		
+		GluonLabels.removeEndLabel(labelEnd);
+		
+		return sb.toString();
 	}
 	
 	@Override

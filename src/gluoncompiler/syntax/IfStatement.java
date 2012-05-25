@@ -1,5 +1,7 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonLabels;
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Keyword;
 import gluoncompiler.Token;
 
@@ -29,18 +31,17 @@ public class IfStatement extends Statement {
 		trueCondition = new StatementGroup(current.getNext(),targets);
 		current = trueCondition.parse();
 		
-		assert(current.isKeyword());
-		if (current.getKeyword().equals(Keyword.ELSE)){
+		if (Keyword.ELSE.equals(current.getKeyword())){
 			current = current.getNext();
 			assert(current.isNewline());
 			targets = new Keyword[1];
 			targets[0] = Keyword.END;
 			falseCondition = new StatementGroup(current.getNext(),targets);
+			current = falseCondition.parse();
 		}
 		
-		assert(current.isKeyword());
-		if (!current.getKeyword().equals(Keyword.END)){
-			
+		if (!Keyword.END.equals(current.getKeyword())){
+			throw new RuntimeException("Expected END keyword, found: " + current.toString());
 		}
 		
 		current = current.getNext();
@@ -49,7 +50,26 @@ public class IfStatement extends Statement {
 
 	@Override
 	public String emitCode() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		String labelEnd = GluonLabels.createLabel(first, "end");
+		String labelElse = GluonLabels.createLabel(first, "else");
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append(GluonOutput.commentLine("If Statement"));
+		sb.append(testExpression.emitCode());
+		sb.append(GluonOutput.codeLine("TEST EAX, EAX"));
+		if (falseCondition == null)
+			sb.append(GluonOutput.codeLine("JZ " + labelEnd));
+		else
+			sb.append(GluonOutput.codeLine("JZ " + labelElse));
+		sb.append(trueCondition.emitCode());
+		if (falseCondition != null){
+			sb.append(GluonOutput.codeLine("JMP " + labelEnd));
+			sb.append(GluonOutput.labelLine(labelElse));
+			sb.append(falseCondition.emitCode());
+		}
+		sb.append(GluonOutput.labelLine(labelEnd));
+		sb.append(GluonOutput.commentLine("End If"));
+		return sb.toString();
 	}
 	
 	@Override

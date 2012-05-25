@@ -1,5 +1,6 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Operator;
 import gluoncompiler.Token;
 import java.util.ArrayList;
@@ -42,7 +43,24 @@ class Expression extends SyntaxObject {
 
 	@Override
 	public String emitCode() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		StringBuilder sb = new StringBuilder();
+		sb.append(term.emitCode());
+		for (int i=0; i<terms.size(); i++){
+			sb.append(GluonOutput.codeLine("PUSH EAX"));
+			sb.append(terms.get(i).emitCode());
+			switch (ops.get(i)) {
+				case ADD:
+					sb.append(GluonOutput.codeLine("POP EBX"));
+					sb.append(GluonOutput.codeLine("ADD EAX,EBX"));
+					break;
+				case SUBTRACT:
+					sb.append(GluonOutput.codeLine("POP EBX"));
+					sb.append(GluonOutput.codeLine("SUB EAX,EBX"));
+					sb.append(GluonOutput.codeLine("NEG EAX"));
+					break;
+			}
+		}
+		return sb.toString();
 	}
 
 	@Override

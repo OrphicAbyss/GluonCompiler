@@ -1,5 +1,7 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonLabels;
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Keyword;
 import gluoncompiler.Token;
 
@@ -23,7 +25,12 @@ class BreakStatement extends Statement {
 
 	@Override
 	public String emitCode() {
-		throw new UnsupportedOperationException("Not supported yet.");
+		String label = GluonLabels.getEndLabel();
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append(GluonOutput.commentLine("Break"));
+		sb.append(GluonOutput.codeLine("JMP " + label));
+		return sb.toString();
 	}
 	
 	@Override

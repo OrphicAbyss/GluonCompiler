@@ -1,12 +1,26 @@
 package gluoncompiler.syntax;
 
-import gluoncompiler.GluonScanner;
-import gluoncompiler.Token;
-import gluoncompiler.Tokeniser;
+import gluoncompiler.*;
 import java.io.File;
 
 /**
  * Builds a syntax tree out of tokens from the tokeniser
+ * 
+ * Java Operators for reference:
+ * postfix 	expr++ expr--
+ * unary 	++expr --expr +expr -expr ~ !
+ * multiplicative 	* / %
+ * additive 	+ -
+ * shift 	<< >> >>>
+ * relational 	< > <= >= instanceof
+ * equality 	== !=
+ * bitwise AND 	&
+ * bitwise exclusive OR 	^
+ * bitwise inclusive OR 	|
+ * logical AND 	&&
+ * logical OR 	||
+ * ternary 	? :
+ * assignment 	= += -= *= /= %= &= ^= |= <<= >>= >>>=
  */
 public class SyntaxBuilder {
 	
@@ -14,11 +28,20 @@ public class SyntaxBuilder {
 		GluonScanner scanner = new GluonScanner(new File("testProg.txt"));
 		Tokeniser tk = new Tokeniser(scanner);
 		tk.tokenise();
-		tk.printTokens();
-		System.out.println("\n\nBuilding syntax tree...");
+		//tk.printTokens();
+		//System.out.println("\n\nBuilding syntax tree...");
 		SyntaxBuilder sb = new SyntaxBuilder(tk);
 		sb.buildTree();
-		sb.printTree();
+		//sb.printTree();
+		GluonVariable.init();
+		
+		GluonOutput out = new GluonOutput();
+		GluonLibrary.printASMStart(out);
+		out.outputLine(sb.emitCode(), false);
+		GluonLibrary.printASMEnd(out);
+		GluonLibrary.printVariables(out, GluonVariable.getVariables());
+
+		System.out.println(out.getOutput());
 	}
 
 	private Tokeniser tokeniser;
@@ -37,5 +60,9 @@ public class SyntaxBuilder {
 	
 	public void printTree(){
 		root.print(0);
+	}
+	
+	public String emitCode(){
+		return root.emitCode();
 	}
 }
