@@ -1,7 +1,6 @@
 package gluoncompiler.syntax;
 
 import gluoncompiler.GluonVariable;
-import gluoncompiler.Operator;
 import gluoncompiler.Token;
 
 /**

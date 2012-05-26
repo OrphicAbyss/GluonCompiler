@@ -51,7 +51,6 @@ public class AssignmentExpression extends SyntaxObject {
 			
 			switch (assignmentOp){
 				case ASSIGN:
-					sb.append(GluonOutput.codeLine("MOV [" + varName + "],EAX"));
 					break;
 				case ASSIGN_ADD:
 					sb.append(GluonOutput.codeLine("MOV EBX,[" + varName + "]"));

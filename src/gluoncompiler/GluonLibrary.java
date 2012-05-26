@@ -86,10 +86,10 @@ public class GluonLibrary {
 	public static void printVariables(GluonOutput output, Collection<String> variables){
 		output.outputLine("; print all vars", false);
 		output.outputLine("print:", false);
-		output.outputLine("MOV BX, 10",true);
 		for (String var: variables){
 			output.outputLine("MOV AX, " + varNameToLabel(var), true);
 			output.outputLine("CALL print_string", true);
+			output.outputLine("MOV BX, 10",true);
 			output.outputLine("MOV EAX, [" + varToLabel(var) + "]", true);
 			output.outputLine("CALL print_number", true);
 		}

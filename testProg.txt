@@ -1,12 +1,12 @@
-var test =10
-test += 4 + 4
-test -= 4
-test *= 4
-test /= 2
-if (test == 28)
-   test = 1
+var test = 1
+test += 1 + 1
+test -= 1
+test *= 2
+test /= 4
+if (test == 1)
+   test = 10
 else
-   test = 2
+   test = 5
 end
 var count=1
 while (count<30)
@@ -14,6 +14,11 @@ while (count<30)
    if (count >= 20)
       break
    end
+end
+var value = 10
+var forValue = 0
+for value = 1:value < 5:value +=1
+   forValue += 10
 end
 print()
 .
