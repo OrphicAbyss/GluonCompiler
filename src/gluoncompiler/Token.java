@@ -185,6 +185,10 @@ public class Token {
 	public boolean isOperator(){
 		return type.equals(TokenType.OPERATOR);
 	}
+	
+	public boolean isOperator(Operator op){
+		return type.equals(TokenType.OPERATOR) && operator.equals(op);
+	}
 
 	public boolean isLiteral(){
 		return type.equals(TokenType.LITERAL);

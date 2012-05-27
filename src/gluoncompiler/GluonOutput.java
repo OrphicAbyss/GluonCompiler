@@ -46,6 +46,10 @@ public class GluonOutput {
 		output.append(":\n");
 	}
 
+	public void append(String str){
+		output.append(str);
+	}
+	
 	/**
 	 * @return Return the output code 
 	 */

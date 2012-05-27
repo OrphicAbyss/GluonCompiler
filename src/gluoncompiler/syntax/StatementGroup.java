@@ -1,7 +1,7 @@
 package gluoncompiler.syntax;
 
-import gluoncompiler.GluonOutput;
 import gluoncompiler.Keyword;
+import gluoncompiler.Operator;
 import gluoncompiler.Token;
 import gluoncompiler.TokenType;
 import java.util.ArrayList;
@@ -12,30 +12,40 @@ import java.util.ArrayList;
  */
 public class StatementGroup extends SyntaxObject {
 	Token first;
-	Keyword[] targets;
+	Keyword[] targetKeywords;
+	Operator[] targetOperators;
 	ArrayList<Statement> children;
 	
 	public StatementGroup(Token start){
 		first = start;
 		children = new ArrayList<>();
-		targets = null;
+		targetKeywords = new Keyword[0];
+		targetOperators = new Operator[0];
 	}
 	
 	public StatementGroup(Token start, Keyword[] targets){
-		this.first = start;
-		this.children = new ArrayList<>();
-		this.targets = targets;
+		first = start;
+		children = new ArrayList<>();
+		targetKeywords = targets;
+		targetOperators = new Operator[0];
+	}
+	
+	public StatementGroup(Token start, Operator[] targets){
+		first = start;
+		children = new ArrayList<>();
+		targetKeywords = new Keyword[0];
+		targetOperators = targets;
 	}
 	
 	@Override
 	public Token parse() {
 		Token next = first;
 		
-		while (!next.isEOF() && (targets == null || !isTarget(next))){
+		while (!next.isEOF() && !isTargetKeyword(next) && !isTargetOperator(next)) {
 			Statement stmt;
-			switch (next.getType()){
+			switch (next.getType()) {
 				case KEYWORD:
-					switch (next.getKeyword()){
+					switch (next.getKeyword()) {
 						case VAR:
 							stmt = new DefineVariable(next);
 							break;
@@ -74,12 +84,24 @@ public class StatementGroup extends SyntaxObject {
 		return next;
 	}
 	
-	private boolean isTarget(Token cur){
+	private boolean isTargetKeyword(Token cur) {
 		if (!cur.isKeyword())
 			return false;
 		
-		for (Keyword target: targets){
+		for (Keyword target: targetKeywords) {
 			if (target.equals(cur.getKeyword()))
+				return true;
+		}
+		
+		return false;
+	}
+	
+	private boolean isTargetOperator(Token cur) {
+		if (!cur.isOperator())
+			return false;
+		
+		for (Operator target: targetOperators) {
+			if (target.equals(cur.getOperator()))
 				return true;
 		}
 		
@@ -89,7 +111,7 @@ public class StatementGroup extends SyntaxObject {
 	@Override
 	public String emitCode() {
 		StringBuilder sb = new StringBuilder();
-		for (Statement stmt: children){
+		for (Statement stmt: children) {
 			sb.append(stmt.emitCode());
 		}
 		return sb.toString();
@@ -98,7 +120,7 @@ public class StatementGroup extends SyntaxObject {
 	@Override
 	public void print(int level) {
 		printClass(level);
-		for (Statement stmt: children){
+		for (Statement stmt: children) {
 			stmt.print(level + 1);
 		}
 	}

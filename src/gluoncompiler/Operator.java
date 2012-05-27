@@ -14,6 +14,8 @@ package gluoncompiler;
 	GREATER_THAN_OR_EQUALS(">="),
 	BRACKET_LEFT("("),
 	BRACKET_RIGHT(")"),
+	BRACE_LEFT("{"),
+	BRACE_RIGHT("}"),
 	ASSIGN("="),
 	LESS_THAN("<"),
 	GREATER_THAN(">"),
@@ -22,7 +24,8 @@ package gluoncompiler;
 	MULTIPLY("*"),
 	DIVIDE("/"),
 	COLON(":"),
-	SEMICOLON(";");
+	SEMICOLON(";"),
+	COMMA(",");
 
 	String value;
 
