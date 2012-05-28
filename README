@@ -12,5 +12,23 @@ Working so far:
 * For loops (c like syntax)
 * While loop
 * Break
-* Function defs (Can parse with multiple input parameters and multiple return values but code output ignores inputs and outputs
+* Function defs (Can parse with multiple input parameters and multiple return
+values but code output ignores inputs and outputs
 * Function calls (With no parameters or return values)
+
+Compiles programs to ASM code. Can be compiled with Flat Assembler (FASM) and 
+run in dosbox. ASM output is a Tiny model program, AKA COM executable. 64bit
+Windows no longer supports this type of file hence the need for dosbox. Uses dos
+interrupts to print variables (using the language built in print() function).
+
+Future direction:
+* Support for char/string data type
+* Support for arrays
+* Support for floating point numbers
+* Support for unsigned integers
+* Support for different sized variables
+* Finish function call/defs
+* More operator support
+* Make ASM output work on windows 64 and linux (maybe using c libs)
+* More consistant syntax
+* Better compile errors
