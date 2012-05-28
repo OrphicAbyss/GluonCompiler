@@ -25,6 +25,9 @@ import java.io.File;
 public class SyntaxBuilder {
 	
 	public static void main(String[] args){
+		GluonVariable.init();
+		GluonFunction.init();
+		
 		GluonScanner scanner = new GluonScanner(new File("testProg.txt"));
 		Tokeniser tk = new Tokeniser(scanner);
 		tk.tokenise();
@@ -33,7 +36,6 @@ public class SyntaxBuilder {
 		SyntaxBuilder sb = new SyntaxBuilder(tk);
 		sb.buildTree();
 		//sb.printTree();
-		GluonVariable.init();
 		
 		GluonOutput out = new GluonOutput();
 		GluonLibrary.printASMStart(out);

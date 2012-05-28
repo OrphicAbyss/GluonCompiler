@@ -31,10 +31,11 @@ class DefineVariable extends Statement {
 
 	@Override
 	public String emitCode() {
-		GluonVariable.registerVariable(variable.getName());
+		String retVal = "";
 		if (assignExp != null) {
-			return assignExp.emitCode();
+			retVal = assignExp.emitCode();
 		}
+		GluonVariable.registerVariable(variable.getName());
 		return "";
 	}
 	

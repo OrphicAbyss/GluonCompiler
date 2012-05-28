@@ -182,12 +182,16 @@ public class Token {
 		return type.equals(TokenType.KEYWORD);
 	}
 
+	public boolean isKeyword(Keyword key){
+		return isKeyword() && keyword.equals(key);
+	}
+	
 	public boolean isOperator(){
 		return type.equals(TokenType.OPERATOR);
 	}
 	
 	public boolean isOperator(Operator op){
-		return type.equals(TokenType.OPERATOR) && operator.equals(op);
+		return isOperator() && operator.equals(op);
 	}
 
 	public boolean isLiteral(){

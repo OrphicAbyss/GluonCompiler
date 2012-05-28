@@ -74,10 +74,11 @@ public class GluonLibrary {
 		output.outputLine(";end of print_string", false);
 		output.outputLine("", true);
 		output.outputLine(";start of program",false);
-		output.outputLine("start:",false);
 	}
 
 	public static void printASMEnd(GluonOutput output){
+		output.outputLine("start:",false);
+		output.outputLine("CALL main", true);
 		output.outputLine(";Dos Exit Call",false);
 		output.outputLine("MOV AX,4C00h",true);
 		output.outputLine("INT 21h",true);

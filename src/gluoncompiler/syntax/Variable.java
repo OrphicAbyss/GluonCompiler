@@ -2,6 +2,7 @@ package gluoncompiler.syntax;
 
 import gluoncompiler.GluonLibrary;
 import gluoncompiler.GluonOutput;
+import gluoncompiler.GluonVariable;
 import gluoncompiler.Token;
 
 /**
@@ -26,6 +27,7 @@ public class Variable extends SyntaxObject {
 	
 	@Override
 	public String emitCode() {
+		GluonVariable.testVariableRegistered(name);
 		return GluonOutput.codeLine("MOV EAX, [" + GluonLibrary.varToLabel(name) + "]");
 	}
 

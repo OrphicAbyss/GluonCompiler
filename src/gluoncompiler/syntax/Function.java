@@ -1,5 +1,7 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonFunction;
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Operator;
 import gluoncompiler.Token;
 import java.util.ArrayList;
@@ -32,6 +34,7 @@ public class Function extends SyntaxObject {
 		if (!funcName.isIdentifier()){
 			throw new RuntimeException("Expected identifier for function name, found: " + funcName);
 		}
+		GluonFunction.registerFunction(funcName.getValue());
 		
 		Token test = funcName.getNext();
 		if (!test.isOperator(Operator.BRACKET_LEFT))
@@ -68,7 +71,8 @@ public class Function extends SyntaxObject {
 			throw new RuntimeException("Expected newline before function logic, found: " + test);
 		
 		test = test.getNext();
-		logic = new StatementGroup(test);
+		Operator[] targets = {Operator.BRACE_RIGHT};
+		logic = new StatementGroup(test, targets);
 		test = logic.parse();
 		
 		if (!test.isOperator(Operator.BRACE_RIGHT))
@@ -79,14 +83,31 @@ public class Function extends SyntaxObject {
 
 	@Override
 	public String emitCode() {
+		StringBuilder sb = new StringBuilder();
+		String funcLabel = GluonFunction.getLabel(funcName.getValue());
+		sb.append(GluonOutput.commentLine("Function: " + funcName.getValue()));
+		sb.append(GluonOutput.labelLine(funcLabel));
 		// Push BP
+		sb.append(GluonOutput.codeLine("PUSH BP"));
 		// Mov BP, SP
+		sb.append(GluonOutput.codeLine("MOV BP, SP"));
 		// Push all reg
-
+		sb.append(GluonOutput.codeLine("PUSH EAX"));
+		sb.append(GluonOutput.codeLine("PUSH EBX"));
+		sb.append(GluonOutput.codeLine("PUSH ECX"));
+		sb.append(GluonOutput.codeLine("PUSH EDX"));
+		// Actual function logic
+		sb.append(logic.emitCode());
 		// Pop all reg
+		sb.append(GluonOutput.codeLine("PUSH EDX"));
+		sb.append(GluonOutput.codeLine("PUSH ECX"));
+		sb.append(GluonOutput.codeLine("PUSH EBX"));
+		sb.append(GluonOutput.codeLine("PUSH EAX"));
 		// Pop BP
+		sb.append(GluonOutput.codeLine("POP BP"));
 		// Ret paramaters
-		throw new UnsupportedOperationException("Not supported yet.");
+		sb.append(GluonOutput.codeLine("RET"));
+		return sb.toString();
 	}
 
 	@Override

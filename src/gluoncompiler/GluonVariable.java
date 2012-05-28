@@ -16,6 +16,8 @@ public class GluonVariable {
 	public static void registerVariable(String name){
 		if (!variables.contains(name)){
 			variables.add(name);
+		} else {
+			Error.abort("Variable already defined in program: " + name);
 		}
 	}
 
