@@ -1,5 +1,16 @@
-Compiler for a half finished language.
+================================================================================
+GLUON LANGUAGE  -  Alpha
+================================================================================
+
+Compiler I'm building for a language I'm making up as I go. Current it's a mix
+of basic, c and pascal.
 
 Working so far:
-Integers maths
-Integer variables
+* Integer maths
+* Integer variables
+* If statements (with else)
+* For loops (c like syntax)
+* While loop
+* Break
+* Function defs (Can parse with multiple input parameters and multiple return values but code output ignores inputs and outputs
+* Function calls (With no parameters or return values)
