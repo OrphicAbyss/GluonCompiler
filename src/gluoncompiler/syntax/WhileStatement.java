@@ -1,9 +1,6 @@
 package gluoncompiler.syntax;
 
-import gluoncompiler.GluonLabels;
-import gluoncompiler.GluonOutput;
-import gluoncompiler.Keyword;
-import gluoncompiler.Token;
+import gluoncompiler.*;
 
 /**
  * While Statement := While <BooleanExpression>
@@ -21,9 +18,21 @@ class WhileStatement extends Statement {
 	@Override
 	public Token parse() {
 		Token next = first.getNext();
+		
+		if (!next.isOperator(Operator.BRACKET_LEFT))
+			throw new RuntimeException("Expected '(' after WHILE, found: " + next);
+		
+		next = next.getNext();
 		testExp = new BooleanExpression(next);
 		next = testExp.parse();
-		assert(next.isNewline());
+		
+		if (!next.isOperator(Operator.BRACKET_RIGHT))
+			throw new RuntimeException("Expected ')' after WHILE condition, found: " + next);
+		
+		next = next.getNext();
+		if (!next.isNewline())
+			throw new RuntimeException("Expected newline, found: " + next);
+
 		next = next.getNext();
 		
 		Keyword[] target = { Keyword.END };

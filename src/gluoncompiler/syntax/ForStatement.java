@@ -1,13 +1,9 @@
 package gluoncompiler.syntax;
 
-import gluoncompiler.GluonLabels;
-import gluoncompiler.GluonOutput;
-import gluoncompiler.Keyword;
-import gluoncompiler.Operator;
-import gluoncompiler.Token;
+import gluoncompiler.*;
 
 /**
- * For Statement := For <AssignmentExpression>:<BooleanExpression>:<AssignmentExpression>
+ * For Statement := For '(' <AssignmentExpression> : <BooleanExpression> : <AssignmentExpression> ')'
  *						<StatementGroup>
  *					End
  */
@@ -26,12 +22,16 @@ class ForStatement extends Statement {
 	public Token parse() {
 		Token test = first.getNext();
 		
+		if (!test.isOperator(Operator.BRACKET_LEFT))
+			throw new RuntimeException("Expected '(' after FOR, found: " + test.toString());
+		
+		test = test.getNext();
 		if (!test.isOperator()){
 			preForAssign = new AssignmentExpression(test);
 			test = preForAssign.parse();
 		}
 		
-		if (!test.isOperator() || !Operator.COLON.equals(test.getOperator()))
+		if (!test.isOperator(Operator.COLON))
 			throw new RuntimeException("Expected Colon Operator, found: " + test.toString()); 
 		
 		test = test.getNext();
@@ -40,15 +40,20 @@ class ForStatement extends Statement {
 			test = conditionTest.parse();
 		}
 		
-		if (!test.isOperator() || !Operator.COLON.equals(test.getOperator()))
+		if (!test.isOperator(Operator.COLON))
 			throw new RuntimeException("Expected Colon Operator, found: " + test.toString());
 		
+		
 		test = test.getNext();
-		if (!test.isNewline()){
+		if (!test.isOperator(Operator.BRACKET_RIGHT)){
 			postForAssign = new AssignmentExpression(test);
 			test = postForAssign.parse();
 		}
 		
+		if (!test.isOperator(Operator.BRACKET_RIGHT))
+			throw new RuntimeException("Expected ')' after post for loop expression, found: " + test.toString());
+		
+		test = test.getNext();
 		if (!test.isNewline())
 			throw new RuntimeException("Expected Newline, found: " + test.toString());
 		

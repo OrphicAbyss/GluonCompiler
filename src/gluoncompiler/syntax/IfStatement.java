@@ -1,12 +1,9 @@
 package gluoncompiler.syntax;
 
-import gluoncompiler.GluonLabels;
-import gluoncompiler.GluonOutput;
-import gluoncompiler.Keyword;
-import gluoncompiler.Token;
+import gluoncompiler.*;
 
 /**
- * If Statement := If <Boolean Expression> \n
+ * If Statement := If '(' <Boolean Expression> ')'
  *                     <StatementGroup>
  *				   [Else
  *					   <StatementGroup>]
@@ -24,28 +21,38 @@ public class IfStatement extends Statement {
 	
 	@Override
 	public Token parse() {
-		testExpression = new BooleanExpression(first.getNext());
-		Token current = testExpression.parse();
-		assert(current.isNewline());
-		Keyword[] targets = {Keyword.ELSE,Keyword.END};
-		trueCondition = new StatementGroup(current.getNext(),targets);
-		current = trueCondition.parse();
+		Token test = first.getNext();
 		
-		if (Keyword.ELSE.equals(current.getKeyword())){
-			current = current.getNext();
-			assert(current.isNewline());
+		if (!test.isOperator(Operator.BRACKET_LEFT))
+			throw new RuntimeException("Expected '(' after IF, found: " + test.toString());
+		
+		testExpression = new BooleanExpression(test.getNext());
+		test = testExpression.parse();
+		
+		if (!test.isOperator(Operator.BRACKET_RIGHT))
+			throw new RuntimeException("Expected ')' after IF condition, found: " + test.toString());
+		
+		test = test.getNext();
+		if (!test.isNewline())
+			throw new RuntimeException("Expected newline, found: " + test.toString());
+		
+		Keyword[] targets = {Keyword.ELSE,Keyword.END};
+		trueCondition = new StatementGroup(test.getNext(),targets);
+		test = trueCondition.parse();
+		
+		if (Keyword.ELSE.equals(test.getKeyword())) {
+			test = test.getNext();
+			assert(test.isNewline());
 			targets = new Keyword[1];
 			targets[0] = Keyword.END;
-			falseCondition = new StatementGroup(current.getNext(),targets);
-			current = falseCondition.parse();
+			falseCondition = new StatementGroup(test.getNext(),targets);
+			test = falseCondition.parse();
 		}
 		
-		if (!Keyword.END.equals(current.getKeyword())){
-			throw new RuntimeException("Expected END keyword, found: " + current.toString());
-		}
+		if (!test.isKeyword(Keyword.END))
+			throw new RuntimeException("Expected END keyword, found: " + test.toString());
 		
-		current = current.getNext();
-		return current;
+		return test.getNext();
 	}
 
 	@Override
