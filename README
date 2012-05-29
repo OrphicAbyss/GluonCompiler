@@ -15,6 +15,7 @@ Working so far:
 * Function defs (Can parse with multiple input parameters and multiple return
 values but code output ignores inputs and outputs
 * Function calls (With no parameters or return values)
+* Postfix operators (++,--)
 
 Compiles programs to ASM code. Can be compiled with Flat Assembler (FASM) and 
 run in dosbox. ASM output is a Tiny model program, AKA COM executable. 64bit

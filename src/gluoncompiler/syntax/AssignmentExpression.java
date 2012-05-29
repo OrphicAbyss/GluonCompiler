@@ -36,6 +36,7 @@ public class AssignmentExpression extends SyntaxObject {
 		
 		if (variable == null) {
 			expression = new BooleanExpression(first);
+			test = expression.parse();
 		}
 		
 		return test;

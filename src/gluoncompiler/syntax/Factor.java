@@ -1,5 +1,6 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonLibrary;
 import gluoncompiler.GluonOutput;
 import gluoncompiler.Operator;
 import gluoncompiler.Token;
@@ -14,8 +15,10 @@ class Factor extends SyntaxObject {
 	Token first;
 	boolean unaryMinus;
 	boolean unaryPlus;
+	boolean increment;
+	boolean decrement;
 	BooleanExpression subExpression;
-	SyntaxObject value;
+	PostFix value;
 	
 	public Factor(Token test) {
 		first = test;
@@ -40,6 +43,14 @@ class Factor extends SyntaxObject {
 					unaryPlus = true;
 					test = test.getNext();
 					break;
+				case INCREMENT:
+					increment = true;
+					test = test.getNext();
+					break;
+				case DECREMENT:
+					decrement = true;
+					test = test.getNext();
+					break;
 				default:
 					throw new RuntimeException("Unknown operator: " + testOp);
 			}
@@ -55,16 +66,18 @@ class Factor extends SyntaxObject {
 				return test.getNext();
 			}
 			throw new RuntimeException("Unknown operator: " + test.getOperator());
-		} else if (test.isLiteral()){
-			value = new LiteralNumber(test);
+		} else if (test.isLiteral()) {
+			if (increment || decrement)
+				throw new RuntimeException("Increment/decrement operators can't operate on literals. Found: " + test.toString());
+			
+			value = new PostFix(test);
+			return value.parse();
 		} else if (test.isIdentifier()){
-			value = new Variable(test);	
+			value = new PostFix(test);
+			return value.parse();
 		} else {
 			throw new RuntimeException("Unknown token: " + test);
 		}
-		
-		test = value.parse();
-		return test;
 	}
 
 	@Override
@@ -73,6 +86,11 @@ class Factor extends SyntaxObject {
 		if (subExpression != null){
 			sb.append(subExpression.emitCode());
 		} else {
+			if (increment)
+				sb.append(GluonOutput.codeLine("INC [" + GluonLibrary.varToLabel(value.getVariable().getName()) + "]"));
+			else if (decrement)
+				sb.append(GluonOutput.codeLine("DEC [" + GluonLibrary.varToLabel(value.getVariable().getName()) + "]"));
+			
 			sb.append(value.emitCode());
 		}
 		
@@ -86,15 +104,20 @@ class Factor extends SyntaxObject {
 
 	@Override
 	public void print(int level) {
-		if (subExpression != null){
+		if (subExpression != null) {
 			subExpression.print(level);
 		} else {
-			if (unaryMinus){
+			if (unaryMinus) {
 				printLevel(level);
 				printLn("-");
-			} else if (unaryPlus){
+			} else if (unaryPlus) {
 				printLevel(level);
 				printLn("+");
+			} else if (increment) {
+				printLevel(level);
+				printLn("INCREMENT THEN USE");
+			} else if (decrement) {
+				printLn("DECREMENT THEN USE");
 			}
 			value.print(level);
 		}

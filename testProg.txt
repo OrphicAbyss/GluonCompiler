@@ -18,7 +18,7 @@ def main():{
    end
    var value = 10
    var forValue = 0
-   for value = 1:value < 5:value +=1
+   for value = 1:value < 5:++value
       forValue += 10
    end
    testFunc()

@@ -12,6 +12,8 @@ package gluoncompiler;
 	NOT_EQUALS("!="),
 	LESS_THAN_OR_EQUALS("<="),
 	GREATER_THAN_OR_EQUALS(">="),
+	INCREMENT("++"),
+	DECREMENT("--"),
 	BRACKET_LEFT("("),
 	BRACKET_RIGHT(")"),
 	BRACE_LEFT("{"),
