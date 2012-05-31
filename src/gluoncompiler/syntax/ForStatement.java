@@ -14,8 +14,8 @@ class ForStatement extends Statement {
 	AssignmentExpression postForAssign;
 	StatementGroup statements;
 	
-	public ForStatement(Token next) {
-		super(next);
+	public ForStatement(Token next, ScopeObject parentScope) {
+		super(next, parentScope);
 	}
 
 	@Override
@@ -26,8 +26,8 @@ class ForStatement extends Statement {
 			throw new RuntimeException("Expected '(' after FOR, found: " + test.toString());
 		
 		test = test.getNext();
-		if (!test.isOperator()){
-			preForAssign = new AssignmentExpression(test);
+		if (!test.isOperator()) {
+			preForAssign = new AssignmentExpression(test, scope);
 			test = preForAssign.parse();
 		}
 		
@@ -35,8 +35,8 @@ class ForStatement extends Statement {
 			throw new RuntimeException("Expected Colon Operator, found: " + test.toString()); 
 		
 		test = test.getNext();
-		if (!test.isOperator()){
-			conditionTest = new BooleanExpression(test);
+		if (!test.isOperator()) {
+			conditionTest = new BooleanExpression(test, scope);
 			test = conditionTest.parse();
 		}
 		
@@ -45,8 +45,8 @@ class ForStatement extends Statement {
 		
 		
 		test = test.getNext();
-		if (!test.isOperator(Operator.BRACKET_RIGHT)){
-			postForAssign = new AssignmentExpression(test);
+		if (!test.isOperator(Operator.BRACKET_RIGHT)) {
+			postForAssign = new AssignmentExpression(test, scope);
 			test = postForAssign.parse();
 		}
 		
@@ -59,7 +59,7 @@ class ForStatement extends Statement {
 		
 		test = test.getNext();
 		Keyword[] targets = { Keyword.END };		
-		statements = new StatementGroup(test, targets);
+		statements = new StatementGroup(test, targets, scope);
 		test = statements.parse();
 		
 		return test.getNext();

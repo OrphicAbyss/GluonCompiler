@@ -11,19 +11,22 @@ class DefineVariable extends Statement {
 	Variable variable;
 	AssignmentExpression assignExp;
 	
-	public DefineVariable(Token next) {
-		super(next);
+	public DefineVariable(Token next, ScopeObject scope) {
+		super(next, scope);
 	}
 
 	@Override
 	public Token parse() {
 		Token var = first.getNext();
-		assert(var.isIdentifier());
-		variable = new Variable(var);
 		
-		Token test = var.getNext();
+		if (!var.isIdentifier())
+			throw new RuntimeException("Expected identifier, found: " + var);
+
+		variable = new Variable(var, scope);
+		Token test = variable.parse();
+		
 		if (test.isOperator()){
-			assignExp = new AssignmentExpression(var);
+			assignExp = new AssignmentExpression(var, scope);
 			test = assignExp.parse();
 		}
 		return test;
@@ -31,10 +34,10 @@ class DefineVariable extends Statement {
 
 	@Override
 	public void emitCode(StringBuilder code) {
+		GluonVariable.registerVariable(variable.getName());
 		if (assignExp != null) {
 			assignExp.emitCode(code);
 		}
-		GluonVariable.registerVariable(variable.getName());
 	}
 	
 	@Override

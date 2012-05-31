@@ -16,8 +16,9 @@ public class AssignmentExpression extends SyntaxObject {
 	private BooleanExpression assignmentExp;
 	private BooleanExpression expression;
 	
-	public AssignmentExpression(Token next){
+	public AssignmentExpression(Token next, ScopeObject parentScope){
 		first = next;
+		scope = parentScope;
 	}
 	
 	@Override
@@ -25,17 +26,17 @@ public class AssignmentExpression extends SyntaxObject {
 		Token test = first.getNext();
 		if (test.isOperator()) {
 			Operator testOp = test.getOperator();
-			if (testOp.name().startsWith("ASSIGN")){
-				variable = new Variable(first);
+			if (testOp.name().startsWith("ASSIGN")) {
+				variable = new Variable(first, scope);
 				assignmentOp = testOp;
 				test = test.getNext();
-				assignmentExp = new BooleanExpression(test);
+				assignmentExp = new BooleanExpression(test, scope);
 				test = assignmentExp.parse();
 			}
 		}
 		
 		if (variable == null) {
-			expression = new BooleanExpression(first);
+			expression = new BooleanExpression(first, scope);
 			test = expression.parse();
 		}
 		

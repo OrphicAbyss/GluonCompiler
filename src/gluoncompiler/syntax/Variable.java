@@ -12,15 +12,17 @@ public class Variable extends SyntaxObject {
 	private String name;
 	private Token token;
 	
-	public Variable(Token token) {
-		assert(token.isIdentifier());
-		this.name = token.getValue();
+	public Variable(Token token, ScopeObject parentScope) {
+		scope = parentScope;
 		this.token = token;
-//		GluonVariable.testVariableRegistered(name);
 	}
 	
 	@Override
 	public Token parse() {
+		if (!token.isIdentifier())
+			throw new RuntimeException("Expected identifier, found: " + token);
+
+		name = token.getValue();
 		return token.getNext();
 	}
 

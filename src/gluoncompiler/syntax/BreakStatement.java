@@ -10,8 +10,8 @@ import gluoncompiler.Token;
  */
 class BreakStatement extends Statement {
 	
-	public BreakStatement(Token next) {
-		super(next);
+	public BreakStatement(Token next, ScopeObject parentScope) {
+		super(next, parentScope);
 	}
 
 	@Override

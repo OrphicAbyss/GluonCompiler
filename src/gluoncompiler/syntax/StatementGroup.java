@@ -11,30 +11,26 @@ import java.util.ArrayList;
  *					  [<Statement Group>]
  */
 public class StatementGroup extends SyntaxObject {
+	
 	Token first;
 	Keyword[] targetKeywords;
 	Operator[] targetOperators;
 	ArrayList<Statement> children;
 	
-	public StatementGroup(Token start){
-		first = start;
-		children = new ArrayList<>();
-		targetKeywords = new Keyword[0];
-		targetOperators = new Operator[0];
-	}
-	
-	public StatementGroup(Token start, Keyword[] targets){
+	public StatementGroup(Token start, Keyword[] targets, ScopeObject parentScope) {
 		first = start;
 		children = new ArrayList<>();
 		targetKeywords = targets;
 		targetOperators = new Operator[0];
+		scope = new ScopeObject(parentScope);
 	}
 	
-	public StatementGroup(Token start, Operator[] targets){
+	public StatementGroup(Token start, Operator[] targets, ScopeObject parentScope) {
 		first = start;
 		children = new ArrayList<>();
 		targetKeywords = new Keyword[0];
 		targetOperators = targets;
+		scope = new ScopeObject(parentScope);
 	}
 	
 	@Override
@@ -47,19 +43,19 @@ public class StatementGroup extends SyntaxObject {
 				case KEYWORD:
 					switch (next.getKeyword()) {
 						case VAR:
-							stmt = new DefineVariable(next);
+							stmt = new DefineVariable(next, scope);
 							break;
 						case IF:
-							stmt = new IfStatement(next);
+							stmt = new IfStatement(next, scope);
 							break;
 						case FOR:
-							stmt = new ForStatement(next);
+							stmt = new ForStatement(next, scope);
 							break;
 						case WHILE:
-							stmt = new WhileStatement(next);
+							stmt = new WhileStatement(next, scope);
 							break;
 						case BREAK:
-							stmt = new BreakStatement(next);
+							stmt = new BreakStatement(next, scope);
 							break;
 						default:
 							gluoncompiler.Error.abort("Unexpected keyword found: " + first.getKeyword().name() + " when parsing Statement.");
@@ -67,7 +63,7 @@ public class StatementGroup extends SyntaxObject {
 					}
 					break;
 				case IDENTIFIER:
-					stmt = new Statement(next);
+					stmt = new Statement(next, scope);
 					break;
 				default:
 					TokenType[] expected = {TokenType.KEYWORD, TokenType.IDENTIFIER};

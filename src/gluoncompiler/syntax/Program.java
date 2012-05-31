@@ -15,13 +15,14 @@ public class Program extends SyntaxObject {
 	public Program(Token start) {
 		first = start;
 		functions = new ArrayList<>();
+		scope = new ScopeObject();
 	}
 	
 	@Override
 	public Token parse() {
 		Token test = first;
 		while (test.isKeyword(Keyword.DEF)){
-			Function func = new Function(test);
+			Function func = new Function(test, scope);
 			test = func.parse();
 			functions.add(func);
 			

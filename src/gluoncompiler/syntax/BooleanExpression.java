@@ -13,14 +13,15 @@ class BooleanExpression extends SyntaxObject {
 	private Expression exp2;
 	private Operator compare;
 	
-	public BooleanExpression(Token next) {
+	public BooleanExpression(Token next, ScopeObject parentScope) {
 		first = next;
+		scope = parentScope;
 	}
 
 	@Override
 	public Token parse() {
 		Token test = first;
-		exp1 = new Expression(test);
+		exp1 = new Expression(test, scope);
 		test = exp1.parse();
 		
 		if (test.isOperator()){
@@ -33,7 +34,7 @@ class BooleanExpression extends SyntaxObject {
 				|| Operator.LESS_THAN_OR_EQUALS.equals(testOp)) {
 				compare = testOp;
 				test = test.getNext();
-				exp2 = new Expression(test);
+				exp2 = new Expression(test, scope);
 				test = exp2.parse();
 			}
 		}

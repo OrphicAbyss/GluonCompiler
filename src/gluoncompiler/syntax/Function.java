@@ -23,9 +23,10 @@ public class Function extends SyntaxObject {
 	ArrayList<Token> returns;
 	StatementGroup logic;
 	
-	public Function(Token next){
+	public Function(Token next, ScopeObject parentScope){
 		first = next;
 		parameters = new ArrayList<>();
+		scope = new ScopeObject(parentScope);
 	}
 	
 	@Override
@@ -72,7 +73,7 @@ public class Function extends SyntaxObject {
 		
 		test = test.getNext();
 		Operator[] targets = {Operator.BRACE_RIGHT};
-		logic = new StatementGroup(test, targets);
+		logic = new StatementGroup(test, targets, scope);
 		test = logic.parse();
 		
 		if (!test.isOperator(Operator.BRACE_RIGHT))

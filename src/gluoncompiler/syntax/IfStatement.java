@@ -14,8 +14,8 @@ public class IfStatement extends Statement {
 	private SyntaxObject trueCondition;
 	private SyntaxObject falseCondition;
 
-	public IfStatement(Token start) {
-		super(start);
+	public IfStatement(Token start, ScopeObject parentScope) {
+		super(start, parentScope);
 		falseCondition = null;
 	}
 	
@@ -26,7 +26,7 @@ public class IfStatement extends Statement {
 		if (!test.isOperator(Operator.BRACKET_LEFT))
 			throw new RuntimeException("Expected '(' after IF, found: " + test.toString());
 		
-		testExpression = new BooleanExpression(test.getNext());
+		testExpression = new BooleanExpression(test.getNext(), scope);
 		test = testExpression.parse();
 		
 		if (!test.isOperator(Operator.BRACKET_RIGHT))
@@ -37,7 +37,7 @@ public class IfStatement extends Statement {
 			throw new RuntimeException("Expected newline, found: " + test.toString());
 		
 		Keyword[] targets = {Keyword.ELSE,Keyword.END};
-		trueCondition = new StatementGroup(test.getNext(),targets);
+		trueCondition = new StatementGroup(test.getNext(), targets, scope);
 		test = trueCondition.parse();
 		
 		if (Keyword.ELSE.equals(test.getKeyword())) {
@@ -45,7 +45,7 @@ public class IfStatement extends Statement {
 			assert(test.isNewline());
 			targets = new Keyword[1];
 			targets[0] = Keyword.END;
-			falseCondition = new StatementGroup(test.getNext(),targets);
+			falseCondition = new StatementGroup(test.getNext(), targets, scope);
 			test = falseCondition.parse();
 		}
 		

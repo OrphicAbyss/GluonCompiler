@@ -16,24 +16,25 @@ public class PostFix extends SyntaxObject {
 	private boolean inc;
 	private boolean dec;
 	
-	public PostFix(Token start){
+	public PostFix(Token start, ScopeObject parentScope) {
 		first = start;
+		scope = parentScope;
 	}
 	
 	@Override
 	public Token parse() {
 		Token test = first;
 		
-		if (test.isLiteral()){
-			value = new LiteralNumber(test);
+		if (test.isLiteral()) {
+			value = new LiteralNumber(test, scope);
 			test = value.parse();
-		} else if (test.isIdentifier()){
-			var = new Variable(test);
+		} else if (test.isIdentifier()) {
+			var = new Variable(test, scope);
 			test = var.parse();
-			if (test.isOperator(Operator.INCREMENT)){
+			if (test.isOperator(Operator.INCREMENT)) {
 				inc = true;
 				test = test.getNext();
-			} else if (test.isOperator(Operator.DECREMENT)){
+			} else if (test.isOperator(Operator.DECREMENT)) {
 				dec = true;
 				test = test.getNext();
 			}

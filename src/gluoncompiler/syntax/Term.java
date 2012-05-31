@@ -15,8 +15,9 @@ class Term extends SyntaxObject {
 	ArrayList<Factor> factors;
 	ArrayList<Operator> ops;
 	
-	public Term(Token test) {
+	public Term(Token test, ScopeObject parentScope) {
 		first = test;
+		scope = parentScope;
 		factors = new ArrayList<>();
 		ops = new ArrayList<>();
 	}
@@ -25,14 +26,14 @@ class Term extends SyntaxObject {
 	public Token parse() {
 		Token test = first;
 		
-		factor = new Factor(test);
+		factor = new Factor(test, scope);
 		test = factor.parse();
 		
 		while (test.isOperator()) {
 			Operator testOp = test.getOperator();
 			if (Operator.MULTIPLY.equals(testOp) || Operator.DIVIDE.equals(testOp)) {
 				ops.add(testOp);
-				Factor f = new Factor(test.getNext());
+				Factor f = new Factor(test.getNext(), scope);
 				factors.add(f);
 				test = f.parse();
 			} else {

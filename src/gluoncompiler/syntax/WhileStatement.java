@@ -11,8 +11,8 @@ class WhileStatement extends Statement {
 	BooleanExpression testExp;
 	StatementGroup statements;
 	
-	public WhileStatement(Token next) {
-		super(next);
+	public WhileStatement(Token next, ScopeObject parentScope) {
+		super(next, parentScope);
 	}
 
 	@Override
@@ -23,7 +23,7 @@ class WhileStatement extends Statement {
 			throw new RuntimeException("Expected '(' after WHILE, found: " + next);
 		
 		next = next.getNext();
-		testExp = new BooleanExpression(next);
+		testExp = new BooleanExpression(next, scope);
 		next = testExp.parse();
 		
 		if (!next.isOperator(Operator.BRACKET_RIGHT))
@@ -36,7 +36,7 @@ class WhileStatement extends Statement {
 		next = next.getNext();
 		
 		Keyword[] target = { Keyword.END };
-		statements = new StatementGroup(next,target);
+		statements = new StatementGroup(next, target, scope);
 		next = statements.parse();
 		
 		return next.getNext();

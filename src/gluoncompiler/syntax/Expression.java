@@ -14,8 +14,9 @@ class Expression extends SyntaxObject {
 	ArrayList<Term> terms;
 	ArrayList<Operator> ops;
 
-	public Expression(Token next) {
+	public Expression(Token next, ScopeObject parentScope) {
 		first = next;
+		scope = parentScope;
 		terms = new ArrayList<>();
 		ops = new ArrayList<>();
 	}
@@ -23,14 +24,14 @@ class Expression extends SyntaxObject {
 	@Override
 	public Token parse() {
 		Token test = first;
-		term = new Term(test);
+		term = new Term(test, scope);
 		test = term.parse();
 		
 		while (test.isOperator()) {
 			Operator testOp = test.getOperator();
 			if (Operator.ADD.equals(testOp) || Operator.SUBTRACT.equals(testOp)) {
 				ops.add(testOp);
-				Term t = new Term(test.getNext());
+				Term t = new Term(test.getNext(), scope);
 				terms.add(t);
 				test = t.parse();
 			} else {

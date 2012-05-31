@@ -20,8 +20,9 @@ class Factor extends SyntaxObject {
 	BooleanExpression subExpression;
 	PostFix value;
 	
-	public Factor(Token test) {
-		first = test;
+	public Factor(Token start, ScopeObject parentScopet) {
+		first = start;
+		scope = parentScopet;
 	}
 
 	@Override
@@ -29,7 +30,7 @@ class Factor extends SyntaxObject {
 		Token test = first;
 		
 		// test for unary operators
-		if (test.isOperator()){
+		if (test.isOperator()) {
 			Operator testOp = test.getOperator();
 			switch (testOp){
 				case BRACKET_LEFT:
@@ -57,23 +58,23 @@ class Factor extends SyntaxObject {
 		}
 		
 		// test for 
-		if (test.isOperator()){
-			if (Operator.BRACKET_LEFT.equals(test.getOperator())){
-				// We need to seperate the unary ops to their own level so that we can have -(10*2)
-				subExpression = new BooleanExpression(test.getNext());
-				test = subExpression.parse();
-				assert(Operator.BRACKET_RIGHT.equals(test.getOperator()));
-				return test.getNext();
-			}
-			throw new RuntimeException("Unknown operator: " + test.getOperator());
+		if (test.isOperator(Operator.BRACKET_LEFT)) {
+			// We need to seperate the unary ops to their own level so that we can have -(10*2)
+			subExpression = new BooleanExpression(test.getNext(), scope);
+			test = subExpression.parse();
+
+			if (!test.isOperator(Operator.BRACKET_RIGHT))
+				throw new RuntimeException("Expected closing bracket. Found: " + test);
+
+			return test.getNext();
 		} else if (test.isLiteral()) {
 			if (increment || decrement)
 				throw new RuntimeException("Increment/decrement operators can't operate on literals. Found: " + test.toString());
 			
-			value = new PostFix(test);
+			value = new PostFix(test, scope);
 			return value.parse();
-		} else if (test.isIdentifier()){
-			value = new PostFix(test);
+		} else if (test.isIdentifier()) {
+			value = new PostFix(test, scope);
 			return value.parse();
 		} else {
 			throw new RuntimeException("Unknown token: " + test);
