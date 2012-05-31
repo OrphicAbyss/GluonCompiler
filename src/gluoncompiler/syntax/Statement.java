@@ -48,11 +48,11 @@ public class Statement extends SyntaxObject {
 	}
 
 	@Override
-	public String emitCode() {
+	public void emitCode(StringBuilder code) {
 		if (isAssignment){
-			return assignmentExp.emitCode();
+			assignmentExp.emitCode(code);
 		} else if (isFunctionCall){
-			return functionCall.emitCode();
+			functionCall.emitCode(code);
 		} else {
 			throw new RuntimeException("Emit Code: Unknown statement type.");
 		}	

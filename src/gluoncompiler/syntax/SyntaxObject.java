@@ -8,7 +8,7 @@ import gluoncompiler.Token;
 public abstract class SyntaxObject {
 	
 	public abstract Token parse();
-	public abstract String emitCode();
+	public abstract void emitCode(StringBuilder code);
 	public abstract void print(int level);
 	
 	protected void printClass(int level) {

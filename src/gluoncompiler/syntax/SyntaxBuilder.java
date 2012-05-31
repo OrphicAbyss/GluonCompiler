@@ -65,6 +65,8 @@ public class SyntaxBuilder {
 	}
 	
 	public String emitCode(){
-		return root.emitCode();
+		StringBuilder sb = new StringBuilder();
+		root.emitCode(sb);
+		return sb.toString();
 	}
 }

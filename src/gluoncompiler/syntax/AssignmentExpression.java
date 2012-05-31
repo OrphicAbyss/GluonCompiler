@@ -43,42 +43,38 @@ public class AssignmentExpression extends SyntaxObject {
 	}
 
 	@Override
-	public String emitCode() {
-		StringBuilder sb = new StringBuilder();
-		
+	public void emitCode(StringBuilder code) {
 		if (variable != null){
 			String varName = GluonLibrary.varToLabel(variable.getName());
-			sb.append(assignmentExp.emitCode());
+			assignmentExp.emitCode(code);
 			
 			switch (assignmentOp){
 				case ASSIGN:
 					break;
 				case ASSIGN_ADD:
-					sb.append(GluonOutput.codeLine("MOV EBX,[" + varName + "]"));
-					sb.append(GluonOutput.codeLine("ADD EAX,EBX"));
+					code.append(GluonOutput.codeLine("MOV EBX,[" + varName + "]"));
+					code.append(GluonOutput.codeLine("ADD EAX,EBX"));
 					break;
 				case ASSIGN_SUBTRACT:
-					sb.append(GluonOutput.codeLine("MOV EBX, EAX"));
-					sb.append(GluonOutput.codeLine("MOV EAX,[" + varName + "]"));
-					sb.append(GluonOutput.codeLine("SUB EAX,EBX"));
+					code.append(GluonOutput.codeLine("MOV EBX, EAX"));
+					code.append(GluonOutput.codeLine("MOV EAX,[" + varName + "]"));
+					code.append(GluonOutput.codeLine("SUB EAX,EBX"));
 					break;
 				case ASSIGN_MULTIPLY:
-					sb.append(GluonOutput.codeLine("MOV EBX,[" + varName + "]"));
-					sb.append(GluonOutput.codeLine("IMUL EAX,EBX"));
+					code.append(GluonOutput.codeLine("MOV EBX,[" + varName + "]"));
+					code.append(GluonOutput.codeLine("IMUL EAX,EBX"));
 					break;
 				case ASSIGN_DIVIDE:
-					sb.append(GluonOutput.codeLine("MOV EBX, EAX"));
-					sb.append(GluonOutput.codeLine("MOV EDX, 0"));
-					sb.append(GluonOutput.codeLine("MOV EAX,[" + varName + "]"));
-					sb.append(GluonOutput.codeLine("IDIV EBX"));
+					code.append(GluonOutput.codeLine("MOV EBX, EAX"));
+					code.append(GluonOutput.codeLine("MOV EDX, 0"));
+					code.append(GluonOutput.codeLine("MOV EAX,[" + varName + "]"));
+					code.append(GluonOutput.codeLine("IDIV EBX"));
 					break;
 			}
-			sb.append(GluonOutput.codeLine("MOV [" + varName + "],EAX"));
+			code.append(GluonOutput.codeLine("MOV [" + varName + "],EAX"));
 		} else {
-			sb.append(expression.emitCode());
+			expression.emitCode(code);
 		}
-		
-		return sb.toString();
 	}
 
 	@Override

@@ -43,26 +43,23 @@ class WhileStatement extends Statement {
 	}
 
 	@Override
-	public String emitCode() {
+	public void emitCode(StringBuilder code) {
 		// Creae labels
 		String labelStart = GluonLabels.createLabel(first, "start");
 		String labelEnd = GluonLabels.createLabel(first, "end");
 		GluonLabels.addEndLabel(labelEnd);
 		
-		StringBuilder sb = new StringBuilder();
-		sb.append(GluonOutput.commentLine("While Statement"));
-		sb.append(GluonOutput.labelLine(labelStart));
-		sb.append(testExp.emitCode());
-		sb.append(GluonOutput.codeLine("TEST EAX, EAX"));
-		sb.append(GluonOutput.codeLine("JZ " + labelEnd));
-		sb.append(statements.emitCode());
-		sb.append(GluonOutput.codeLine("JMP " + labelStart));
-		sb.append(GluonOutput.labelLine(labelEnd));
-		sb.append(GluonOutput.commentLine("End While"));
+		code.append(GluonOutput.commentLine("While Statement"));
+		code.append(GluonOutput.labelLine(labelStart));
+		testExp.emitCode(code);
+		code.append(GluonOutput.codeLine("TEST EAX, EAX"));
+		code.append(GluonOutput.codeLine("JZ " + labelEnd));
+		statements.emitCode(code);
+		code.append(GluonOutput.codeLine("JMP " + labelStart));
+		code.append(GluonOutput.labelLine(labelEnd));
+		code.append(GluonOutput.commentLine("End While"));
 		
 		GluonLabels.removeEndLabel(labelEnd);
-		
-		return sb.toString();
 	}
 	
 	@Override

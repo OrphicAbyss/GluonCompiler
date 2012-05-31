@@ -66,28 +66,25 @@ class ForStatement extends Statement {
 	}
 
 	@Override
-	public String emitCode() {
+	public void emitCode(StringBuilder code) {
 		String testLabel = GluonLabels.createLabel(first, "test");
 		String endLabel = GluonLabels.createLabel(first, "end");
-		StringBuilder sb = new StringBuilder();
 		
-		sb.append(GluonOutput.commentLine("For Statement"));
+		code.append(GluonOutput.commentLine("For Statement"));
 		if (preForAssign != null)
-			sb.append(preForAssign.emitCode());
+			preForAssign.emitCode(code);
 		
-		sb.append(GluonOutput.labelLine(testLabel));
-		sb.append(conditionTest.emitCode());
-		sb.append(GluonOutput.codeLine("TEST EAX, EAX"));
-		sb.append(GluonOutput.codeLine("JZ " + endLabel));
-		sb.append(statements.emitCode());
+		code.append(GluonOutput.labelLine(testLabel));
+		conditionTest.emitCode(code);
+		code.append(GluonOutput.codeLine("TEST EAX, EAX"));
+		code.append(GluonOutput.codeLine("JZ " + endLabel));
+		statements.emitCode(code);
 	
 		if (postForAssign != null)
-			sb.append(postForAssign.emitCode());
-		sb.append(GluonOutput.codeLine("JMP " + testLabel));
-		sb.append(GluonOutput.labelLine(endLabel));
-		sb.append(GluonOutput.commentLine("For End"));
-		
-		return sb.toString();
+			postForAssign.emitCode(code);
+		code.append(GluonOutput.codeLine("JMP " + testLabel));
+		code.append(GluonOutput.labelLine(endLabel));
+		code.append(GluonOutput.commentLine("For End"));
 	}
 	
 }

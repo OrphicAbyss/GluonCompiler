@@ -28,7 +28,10 @@ Future direction:
 * Support for floating point numbers
 * Support for unsigned integers
 * Support for different sized variables
+* Add scoping of variables
 * Finish function call/defs
+* Add classes
+* Add scoping for class objects
 * More operator support
 * Make ASM output work on windows 64 and linux (maybe using c libs)
 * More consistant syntax

@@ -41,41 +41,40 @@ class BooleanExpression extends SyntaxObject {
 	}
 
 	@Override
-	public String emitCode() {
-		if (exp2 == null)
-			return exp1.emitCode();
+	public void emitCode(StringBuilder code) {
+		if (exp2 == null) {
+			exp1.emitCode(code);
+			return;
+		}
 		
-		StringBuilder sb = new StringBuilder();
-		sb.append(exp1.emitCode());		
-		sb.append(GluonOutput.codeLine("PUSH EAX"));
-		sb.append(exp2.emitCode());
-		sb.append(GluonOutput.codeLine("POP EBX"));
-		sb.append(GluonOutput.codeLine("CMP EAX, EBX"));
+		exp1.emitCode(code);		
+		code.append(GluonOutput.codeLine("PUSH EAX"));
+		exp2.emitCode(code);
+		code.append(GluonOutput.codeLine("POP EBX"));
+		code.append(GluonOutput.codeLine("CMP EAX, EBX"));
 		
 		switch (compare){
 			case EQUALS:
-				sb.append(GluonOutput.codeLine("SETE AL"));
+				code.append(GluonOutput.codeLine("SETE AL"));
 				break;
 			case LESS_THAN:
-				sb.append(GluonOutput.codeLine("SETG AL"));
+				code.append(GluonOutput.codeLine("SETG AL"));
 				break;
 			case LESS_THAN_OR_EQUALS:
-				sb.append(GluonOutput.codeLine("SETGE AL"));
+				code.append(GluonOutput.codeLine("SETGE AL"));
 				break;
 			case GREATER_THAN:
-				sb.append(GluonOutput.codeLine("SETL AL"));
+				code.append(GluonOutput.codeLine("SETL AL"));
 				break;
 			case GREATER_THAN_OR_EQUALS:
-				sb.append(GluonOutput.codeLine("SETLE AL"));
+				code.append(GluonOutput.codeLine("SETLE AL"));
 				break;
 			case NOT_EQUALS:
-				sb.append(GluonOutput.codeLine("SETNE AL"));
+				code.append(GluonOutput.codeLine("SETNE AL"));
 				break;
 			default:
 				throw new RuntimeException("Unknown compare type.");
 		}
-		
-		return sb.toString();
 	}
 
 	@Override

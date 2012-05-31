@@ -42,25 +42,23 @@ class Expression extends SyntaxObject {
 	}
 
 	@Override
-	public String emitCode() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(term.emitCode());
+	public void emitCode(StringBuilder code) {
+		term.emitCode(code);
 		for (int i=0; i<terms.size(); i++){
-			sb.append(GluonOutput.codeLine("PUSH EAX"));
-			sb.append(terms.get(i).emitCode());
+			code.append(GluonOutput.codeLine("PUSH EAX"));
+			terms.get(i).emitCode(code);
 			switch (ops.get(i)) {
 				case ADD:
-					sb.append(GluonOutput.codeLine("POP EBX"));
-					sb.append(GluonOutput.codeLine("ADD EAX,EBX"));
+					code.append(GluonOutput.codeLine("POP EBX"));
+					code.append(GluonOutput.codeLine("ADD EAX,EBX"));
 					break;
 				case SUBTRACT:
-					sb.append(GluonOutput.codeLine("POP EBX"));
-					sb.append(GluonOutput.codeLine("SUB EAX,EBX"));
-					sb.append(GluonOutput.codeLine("NEG EAX"));
+					code.append(GluonOutput.codeLine("POP EBX"));
+					code.append(GluonOutput.codeLine("SUB EAX,EBX"));
+					code.append(GluonOutput.codeLine("NEG EAX"));
 					break;
 			}
 		}
-		return sb.toString();
 	}
 
 	@Override

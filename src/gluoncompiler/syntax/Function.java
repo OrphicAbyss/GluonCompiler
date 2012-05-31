@@ -11,7 +11,7 @@ import java.util.ArrayList;
  *						<Statement Group>
  *                  }
  * 
- * Paramaters := [<Identifier>[, <Identifier>]+]
+ * Parameters := [<Identifier>[, <Identifier>]+]
  * 
  * Returns := [<Identifier>[, <Identifier>]+]
  */
@@ -19,13 +19,13 @@ public class Function extends SyntaxObject {
 
 	Token first;
 	Token funcName;
-	ArrayList<Token> paramaters;
+	ArrayList<Token> parameters;
 	ArrayList<Token> returns;
 	StatementGroup logic;
 	
 	public Function(Token next){
 		first = next;
-		paramaters = new ArrayList<>();
+		parameters = new ArrayList<>();
 	}
 	
 	@Override
@@ -42,7 +42,7 @@ public class Function extends SyntaxObject {
 		
 		test = test.getNext();
 		while (test.isIdentifier()){
-			paramaters.add(test);
+			parameters.add(test);
 			test = test.getNext();
 			if (test.isOperator(Operator.COMMA))
 				test = test.getNext();
@@ -82,32 +82,44 @@ public class Function extends SyntaxObject {
 	}
 
 	@Override
-	public String emitCode() {
-		StringBuilder sb = new StringBuilder();
+	public void emitCode(StringBuilder code) {
+		code.append(GluonOutput.commentLine("Function: " + funcName.getValue()));
 		String funcLabel = GluonFunction.getLabel(funcName.getValue());
-		sb.append(GluonOutput.commentLine("Function: " + funcName.getValue()));
-		sb.append(GluonOutput.labelLine(funcLabel));
+		// Setup variables passed in on stack for use
+		int offset = 2 + 4 * parameters.size();
+		int used = 0;
+		for (Token parameter: parameters){
+			int stackOffset = offset - used;
+			used += 4;
+			code.append(GluonOutput.codeLine(parameter.getText() + " EQU " + stackOffset + "[bp]"));
+		}
+		// Function
+		code.append(GluonOutput.labelLine(funcLabel));
 		// Push BP
-		sb.append(GluonOutput.codeLine("PUSH BP"));
+		code.append(GluonOutput.codeLine("PUSH BP"));
 		// Mov BP, SP
-		sb.append(GluonOutput.codeLine("MOV BP, SP"));
+		code.append(GluonOutput.codeLine("MOV BP, SP"));
 		// Push all reg
-		sb.append(GluonOutput.codeLine("PUSH EAX"));
-		sb.append(GluonOutput.codeLine("PUSH EBX"));
-		sb.append(GluonOutput.codeLine("PUSH ECX"));
-		sb.append(GluonOutput.codeLine("PUSH EDX"));
+		code.append(GluonOutput.codeLine("PUSH EAX"));
+		code.append(GluonOutput.codeLine("PUSH EBX"));
+		code.append(GluonOutput.codeLine("PUSH ECX"));
+		code.append(GluonOutput.codeLine("PUSH EDX"));
 		// Actual function logic
-		sb.append(logic.emitCode());
+		logic.emitCode(code);
 		// Pop all reg
-		sb.append(GluonOutput.codeLine("PUSH EDX"));
-		sb.append(GluonOutput.codeLine("PUSH ECX"));
-		sb.append(GluonOutput.codeLine("PUSH EBX"));
-		sb.append(GluonOutput.codeLine("PUSH EAX"));
+		code.append(GluonOutput.codeLine("PUSH EDX"));
+		code.append(GluonOutput.codeLine("PUSH ECX"));
+		code.append(GluonOutput.codeLine("PUSH EBX"));
+		code.append(GluonOutput.codeLine("PUSH EAX"));
 		// Pop BP
-		sb.append(GluonOutput.codeLine("POP BP"));
+		code.append(GluonOutput.codeLine("POP BP"));
 		// Ret paramaters
-		sb.append(GluonOutput.codeLine("RET"));
-		return sb.toString();
+		code.append(GluonOutput.codeLine("RET"));
+		
+		for (Token parameter: parameters){
+			code.append(GluonOutput.codeLine("RESTORE " + parameter.getText()));
+		}
+		code.append(GluonOutput.commentLine("Function end: " + funcName.getValue()));
 	}
 
 	@Override

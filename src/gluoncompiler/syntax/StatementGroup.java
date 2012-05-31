@@ -109,12 +109,9 @@ public class StatementGroup extends SyntaxObject {
 	}
 	
 	@Override
-	public String emitCode() {
-		StringBuilder sb = new StringBuilder();
-		for (Statement stmt: children) {
-			sb.append(stmt.emitCode());
-		}
-		return sb.toString();
+	public void emitCode(StringBuilder code) {
+		for (Statement stmt: children)
+			stmt.emitCode(code);
 	}
 
 	@Override

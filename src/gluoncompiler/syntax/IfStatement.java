@@ -56,27 +56,25 @@ public class IfStatement extends Statement {
 	}
 
 	@Override
-	public String emitCode() {
+	public void emitCode(StringBuilder code) {
 		String labelEnd = GluonLabels.createLabel(first, "end");
 		String labelElse = GluonLabels.createLabel(first, "else");
 		
-		StringBuilder sb = new StringBuilder();
-		sb.append(GluonOutput.commentLine("If Statement"));
-		sb.append(testExpression.emitCode());
-		sb.append(GluonOutput.codeLine("TEST EAX, EAX"));
+		code.append(GluonOutput.commentLine("If Statement"));
+		testExpression.emitCode(code);
+		code.append(GluonOutput.codeLine("TEST EAX, EAX"));
 		if (falseCondition == null)
-			sb.append(GluonOutput.codeLine("JZ " + labelEnd));
+			code.append(GluonOutput.codeLine("JZ " + labelEnd));
 		else
-			sb.append(GluonOutput.codeLine("JZ " + labelElse));
-		sb.append(trueCondition.emitCode());
+			code.append(GluonOutput.codeLine("JZ " + labelElse));
+		trueCondition.emitCode(code);
 		if (falseCondition != null){
-			sb.append(GluonOutput.codeLine("JMP " + labelEnd));
-			sb.append(GluonOutput.labelLine(labelElse));
-			sb.append(falseCondition.emitCode());
+			code.append(GluonOutput.codeLine("JMP " + labelEnd));
+			code.append(GluonOutput.labelLine(labelElse));
+			falseCondition.emitCode(code);
 		}
-		sb.append(GluonOutput.labelLine(labelEnd));
-		sb.append(GluonOutput.commentLine("End If"));
-		return sb.toString();
+		code.append(GluonOutput.labelLine(labelEnd));
+		code.append(GluonOutput.commentLine("End If"));
 	}
 	
 	@Override

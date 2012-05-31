@@ -34,12 +34,9 @@ public class Program extends SyntaxObject {
 	}
 	
 	@Override
-	public String emitCode() {
-		StringBuilder sb = new StringBuilder();
+	public void emitCode(StringBuilder code) {
 		for (Function func: functions)
-			sb.append(func.emitCode());
-		
-		return sb.toString();
+			func.emitCode(code);
 	}
 
 	@Override

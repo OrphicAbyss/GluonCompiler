@@ -4,11 +4,13 @@ def main():{
    test -= 1
    test *= 2
    test /= 4
+   
    if (test == 1)
       test = 10
    else
       test = 5
    end
+   
    var count=1
    while (count<30)
       count += 1
@@ -16,6 +18,7 @@ def main():{
          break
       end
    end
+   
    var value = 10
    var forValue = 0
    for (value = 1: value < 5: ++value)
@@ -23,7 +26,8 @@ def main():{
    end
    testFunc()
 }
-def testFunc():{
+
+def testFunc(one, two, three):{
    print()
 }
 .

@@ -6,7 +6,7 @@ import gluoncompiler.Keyword;
 import gluoncompiler.Token;
 
 /**
- *
+ * Break Statement := 'BREAK'
  */
 class BreakStatement extends Statement {
 	
@@ -24,13 +24,11 @@ class BreakStatement extends Statement {
 	}
 
 	@Override
-	public String emitCode() {
+	public void emitCode(StringBuilder code) {
 		String label = GluonLabels.getEndLabel();
 		
-		StringBuilder sb = new StringBuilder();
-		sb.append(GluonOutput.commentLine("Break"));
-		sb.append(GluonOutput.codeLine("JMP " + label));
-		return sb.toString();
+		code.append(GluonOutput.commentLine("Break"));
+		code.append(GluonOutput.codeLine("JMP " + label));
 	}
 	
 	@Override

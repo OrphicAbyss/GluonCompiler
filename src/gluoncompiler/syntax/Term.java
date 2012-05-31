@@ -44,26 +44,24 @@ class Term extends SyntaxObject {
 	}
 
 	@Override
-	public String emitCode() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(factor.emitCode());
+	public void emitCode(StringBuilder code) {
+		factor.emitCode(code);
 		for (int i=0; i<factors.size(); i++) {
-			sb.append(GluonOutput.codeLine("PUSH EAX"));
-			sb.append(factors.get(i).emitCode());
+			code.append(GluonOutput.codeLine("PUSH EAX"));
+			factors.get(i).emitCode(code);
 			switch (ops.get(i)) {
 				case MULTIPLY:
-					sb.append(GluonOutput.codeLine("POP EBX"));
-					sb.append(GluonOutput.codeLine("IMUL EAX,EBX"));
+					code.append(GluonOutput.codeLine("POP EBX"));
+					code.append(GluonOutput.codeLine("IMUL EAX,EBX"));
 					break;
 				case DIVIDE:
-					sb.append(GluonOutput.codeLine("MOV EBX, EAX"));
-					sb.append(GluonOutput.codeLine("MOV EDX, 0"));
-					sb.append(GluonOutput.codeLine("POP EAX"));
-					sb.append(GluonOutput.codeLine("IDIV EBX"));
+					code.append(GluonOutput.codeLine("MOV EBX, EAX"));
+					code.append(GluonOutput.codeLine("MOV EDX, 0"));
+					code.append(GluonOutput.codeLine("POP EAX"));
+					code.append(GluonOutput.codeLine("IDIV EBX"));
 					break;
 			}
 		}
-		return sb.toString();
 	}
 
 	@Override
