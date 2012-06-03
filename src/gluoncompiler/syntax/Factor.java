@@ -82,20 +82,20 @@ class Factor extends SyntaxObject {
 	}
 
 	@Override
-	public void emitCode(StringBuilder code) {
+	public void emitCode(GluonOutput code) {
 		if (subExpression != null){
 			subExpression.emitCode(code);
 		} else {
 			if (increment)
-				code.append(GluonOutput.codeLine("INC [" + GluonLibrary.varToLabel(value.getVariable().getName()) + "]"));
+				code.code("INC [" + GluonLibrary.varToLabel(value.getVariable().getName()) + "]");
 			else if (decrement)
-				code.append(GluonOutput.codeLine("DEC [" + GluonLibrary.varToLabel(value.getVariable().getName()) + "]"));
+				code.code("DEC [" + GluonLibrary.varToLabel(value.getVariable().getName()) + "]");
 			
 			value.emitCode(code);
 		}
 		
 		if (unaryMinus){
-			code.append(GluonOutput.codeLine("NEG EAX"));
+			code.code("NEG EAX");
 		} else if (unaryPlus){
 			// do nothing
 		}

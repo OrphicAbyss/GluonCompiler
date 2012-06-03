@@ -43,21 +43,21 @@ class WhileStatement extends Statement {
 	}
 
 	@Override
-	public void emitCode(StringBuilder code) {
+	public void emitCode(GluonOutput code) {
 		// Creae labels
 		String labelStart = GluonLabels.createLabel(first, "start");
 		String labelEnd = GluonLabels.createLabel(first, "end");
 		GluonLabels.addEndLabel(labelEnd);
 		
-		code.append(GluonOutput.commentLine("While Statement"));
-		code.append(GluonOutput.labelLine(labelStart));
+		code.comment("While Statement");
+		code.label(labelStart);
 		testExp.emitCode(code);
-		code.append(GluonOutput.codeLine("TEST EAX, EAX"));
-		code.append(GluonOutput.codeLine("JZ " + labelEnd));
+		code.code("TEST EAX, EAX");
+		code.code("JZ " + labelEnd);
 		statements.emitCode(code);
-		code.append(GluonOutput.codeLine("JMP " + labelStart));
-		code.append(GluonOutput.labelLine(labelEnd));
-		code.append(GluonOutput.commentLine("End While"));
+		code.code("JMP " + labelStart);
+		code.label(labelEnd);
+		code.comment("End While");
 		
 		GluonLabels.removeEndLabel(labelEnd);
 	}

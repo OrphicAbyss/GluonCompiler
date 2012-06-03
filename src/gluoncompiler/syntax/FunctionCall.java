@@ -33,8 +33,8 @@ public class FunctionCall extends SyntaxObject {
 	}
 	
 	@Override
-	public void emitCode(StringBuilder code) {
-		code.append(GluonOutput.codeLine("CALL " + name));
+	public void emitCode(GluonOutput code) {
+		code.code("CALL " + name);
 	}
 
 	@Override

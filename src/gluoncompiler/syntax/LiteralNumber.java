@@ -25,8 +25,8 @@ public class LiteralNumber extends SyntaxObject {
 	}
 	
 	@Override
-	public void emitCode(StringBuilder code){
-		code.append(GluonOutput.codeLine("MOV EAX, " + value));
+	public void emitCode(GluonOutput code){
+		code.code("MOV EAX, " + value);
 	}
 
 	@Override

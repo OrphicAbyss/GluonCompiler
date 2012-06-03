@@ -1,5 +1,6 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Keyword;
 import gluoncompiler.Token;
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ public class Program extends SyntaxObject {
 	}
 	
 	@Override
-	public void emitCode(StringBuilder code) {
+	public void emitCode(GluonOutput code) {
 		for (Function func: functions)
 			func.emitCode(code);
 	}

@@ -83,8 +83,8 @@ public class Function extends SyntaxObject {
 	}
 
 	@Override
-	public void emitCode(StringBuilder code) {
-		code.append(GluonOutput.commentLine("Function: " + funcName.getValue()));
+	public void emitCode(GluonOutput code) {
+		code.comment("Function: " + funcName.getValue());
 		String funcLabel = GluonFunction.getLabel(funcName.getValue());
 		// Setup variables passed in on stack for use
 		int offset = 2 + 4 * parameters.size();
@@ -92,35 +92,35 @@ public class Function extends SyntaxObject {
 		for (Token parameter: parameters){
 			int stackOffset = offset - used;
 			used += 4;
-			code.append(GluonOutput.codeLine(parameter.getText() + " EQU " + stackOffset + "[bp]"));
+			code.code(parameter.getText() + " EQU " + stackOffset + "[bp]");
 		}
 		// Function
-		code.append(GluonOutput.labelLine(funcLabel));
+		code.label(funcLabel);
 		// Push BP
-		code.append(GluonOutput.codeLine("PUSH BP"));
+		code.code("PUSH BP");
 		// Mov BP, SP
-		code.append(GluonOutput.codeLine("MOV BP, SP"));
+		code.code("MOV BP, SP");
 		// Push all reg
-		code.append(GluonOutput.codeLine("PUSH EAX"));
-		code.append(GluonOutput.codeLine("PUSH EBX"));
-		code.append(GluonOutput.codeLine("PUSH ECX"));
-		code.append(GluonOutput.codeLine("PUSH EDX"));
+		code.code("PUSH EAX");
+		code.code("PUSH EBX");
+		code.code("PUSH ECX");
+		code.code("PUSH EDX");
 		// Actual function logic
 		logic.emitCode(code);
 		// Pop all reg
-		code.append(GluonOutput.codeLine("PUSH EDX"));
-		code.append(GluonOutput.codeLine("PUSH ECX"));
-		code.append(GluonOutput.codeLine("PUSH EBX"));
-		code.append(GluonOutput.codeLine("PUSH EAX"));
+		code.code("PUSH EDX");
+		code.code("PUSH ECX");
+		code.code("PUSH EBX");
+		code.code("PUSH EAX");
 		// Pop BP
-		code.append(GluonOutput.codeLine("POP BP"));
+		code.code("POP BP");
 		// Ret paramaters
-		code.append(GluonOutput.codeLine("RET"));
+		code.code("RET");
 		
 		for (Token parameter: parameters){
-			code.append(GluonOutput.codeLine("RESTORE " + parameter.getText()));
+			code.code("RESTORE " + parameter.getText());
 		}
-		code.append(GluonOutput.commentLine("Function end: " + funcName.getValue()));
+		code.comment("Function end: " + funcName.getValue());
 	}
 
 	@Override

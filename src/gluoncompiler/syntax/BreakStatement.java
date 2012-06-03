@@ -24,11 +24,11 @@ class BreakStatement extends Statement {
 	}
 
 	@Override
-	public void emitCode(StringBuilder code) {
+	public void emitCode(GluonOutput code) {
 		String label = GluonLabels.getEndLabel();
 		
-		code.append(GluonOutput.commentLine("Break"));
-		code.append(GluonOutput.codeLine("JMP " + label));
+		code.comment("Break");
+		code.code("JMP " + label);
 	}
 	
 	@Override

@@ -45,21 +45,21 @@ class Term extends SyntaxObject {
 	}
 
 	@Override
-	public void emitCode(StringBuilder code) {
+	public void emitCode(GluonOutput code) {
 		factor.emitCode(code);
 		for (int i=0; i<factors.size(); i++) {
-			code.append(GluonOutput.codeLine("PUSH EAX"));
+			code.code("PUSH EAX");
 			factors.get(i).emitCode(code);
 			switch (ops.get(i)) {
 				case MULTIPLY:
-					code.append(GluonOutput.codeLine("POP EBX"));
-					code.append(GluonOutput.codeLine("IMUL EAX,EBX"));
+					code.code("POP EBX");
+					code.code("IMUL EAX,EBX");
 					break;
 				case DIVIDE:
-					code.append(GluonOutput.codeLine("MOV EBX, EAX"));
-					code.append(GluonOutput.codeLine("MOV EDX, 0"));
-					code.append(GluonOutput.codeLine("POP EAX"));
-					code.append(GluonOutput.codeLine("IDIV EBX"));
+					code.code("MOV EBX, EAX");
+					code.code("MOV EDX, 0");
+					code.code("POP EAX");
+					code.code("IDIV EBX");
 					break;
 			}
 		}

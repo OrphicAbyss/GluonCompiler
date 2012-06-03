@@ -39,7 +39,8 @@ public class SyntaxBuilder {
 		
 		GluonOutput out = new GluonOutput();
 		GluonLibrary.printASMStart(out);
-		out.outputLine(sb.emitCode(), false);
+		
+		sb.emitCode(out);
 		GluonLibrary.printASMEnd(out);
 		GluonLibrary.printVariables(out, GluonVariable.getVariables());
 
@@ -64,9 +65,7 @@ public class SyntaxBuilder {
 		root.print(0);
 	}
 	
-	public String emitCode(){
-		StringBuilder sb = new StringBuilder();
-		root.emitCode(sb);
-		return sb.toString();
+	public void emitCode(GluonOutput code){
+		root.emitCode(code);
 	}
 }

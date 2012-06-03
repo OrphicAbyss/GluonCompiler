@@ -28,9 +28,9 @@ public class Variable extends SyntaxObject {
 
 	
 	@Override
-	public void emitCode(StringBuilder code) {
+	public void emitCode(GluonOutput code) {
 		GluonVariable.testVariableRegistered(name);
-		code.append(GluonOutput.codeLine("MOV EAX, [" + GluonLibrary.varToLabel(name) + "]"));
+		code.code("MOV EAX, [" + GluonLibrary.varToLabel(name) + "]");
 	}
 
 	@Override

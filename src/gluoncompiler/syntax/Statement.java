@@ -1,5 +1,6 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Operator;
 import gluoncompiler.Token;
 
@@ -47,7 +48,7 @@ public class Statement extends SyntaxObject {
 	}
 
 	@Override
-	public void emitCode(StringBuilder code) {
+	public void emitCode(GluonOutput code) {
 		if (isAssignment){
 			assignmentExp.emitCode(code);
 		} else if (isFunctionCall){

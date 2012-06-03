@@ -43,20 +43,20 @@ class Expression extends SyntaxObject {
 	}
 
 	@Override
-	public void emitCode(StringBuilder code) {
+	public void emitCode(GluonOutput code) {
 		term.emitCode(code);
 		for (int i=0; i<terms.size(); i++){
-			code.append(GluonOutput.codeLine("PUSH EAX"));
+			code.code("PUSH EAX");
 			terms.get(i).emitCode(code);
 			switch (ops.get(i)) {
 				case ADD:
-					code.append(GluonOutput.codeLine("POP EBX"));
-					code.append(GluonOutput.codeLine("ADD EAX,EBX"));
+					code.code("POP EBX");
+					code.code("ADD EAX,EBX");
 					break;
 				case SUBTRACT:
-					code.append(GluonOutput.codeLine("POP EBX"));
-					code.append(GluonOutput.codeLine("SUB EAX,EBX"));
-					code.append(GluonOutput.codeLine("NEG EAX"));
+					code.code("POP EBX");
+					code.code("SUB EAX,EBX");
+					code.code("NEG EAX");
 					break;
 			}
 		}

@@ -56,25 +56,25 @@ public class IfStatement extends Statement {
 	}
 
 	@Override
-	public void emitCode(StringBuilder code) {
+	public void emitCode(GluonOutput code) {
 		String labelEnd = GluonLabels.createLabel(first, "end");
 		String labelElse = GluonLabels.createLabel(first, "else");
 		
-		code.append(GluonOutput.commentLine("If Statement"));
+		code.comment("If Statement");
 		testExpression.emitCode(code);
-		code.append(GluonOutput.codeLine("TEST EAX, EAX"));
+		code.code("TEST EAX, EAX");
 		if (falseCondition == null)
-			code.append(GluonOutput.codeLine("JZ " + labelEnd));
+			code.code("JZ " + labelEnd);
 		else
-			code.append(GluonOutput.codeLine("JZ " + labelElse));
+			code.code("JZ " + labelElse);
 		trueCondition.emitCode(code);
 		if (falseCondition != null){
-			code.append(GluonOutput.codeLine("JMP " + labelEnd));
-			code.append(GluonOutput.labelLine(labelElse));
+			code.code("JMP " + labelEnd);
+			code.label(labelElse);
 			falseCondition.emitCode(code);
 		}
-		code.append(GluonOutput.labelLine(labelEnd));
-		code.append(GluonOutput.commentLine("End If"));
+		code.label(labelEnd);
+		code.comment("End If");
 	}
 	
 	@Override

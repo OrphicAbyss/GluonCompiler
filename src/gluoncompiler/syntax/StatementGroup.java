@@ -1,9 +1,6 @@
 package gluoncompiler.syntax;
 
-import gluoncompiler.Keyword;
-import gluoncompiler.Operator;
-import gluoncompiler.Token;
-import gluoncompiler.TokenType;
+import gluoncompiler.*;
 import java.util.ArrayList;
 
 /**
@@ -105,7 +102,7 @@ public class StatementGroup extends SyntaxObject {
 	}
 	
 	@Override
-	public void emitCode(StringBuilder code) {
+	public void emitCode(GluonOutput code) {
 		for (Statement stmt: children)
 			stmt.emitCode(code);
 	}

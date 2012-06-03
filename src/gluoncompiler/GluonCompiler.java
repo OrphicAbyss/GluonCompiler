@@ -1,6 +1,6 @@
 package gluoncompiler;
 
-import gluoncompiler.syntax.*;
+import gluoncompiler.syntax.SyntaxBuilder;
 import java.io.File;
 
 /**
@@ -38,7 +38,7 @@ public class GluonCompiler {
 		output = new GluonOutput();
 		GluonLibrary.printASMStart(output);
 
-		output.append(syntaxBuilder.emitCode());
+		syntaxBuilder.emitCode(output);
 
 		GluonLibrary.printASMEnd(output);
 		GluonLibrary.printVariables(output, GluonVariable.getVariables());

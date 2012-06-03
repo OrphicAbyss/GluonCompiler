@@ -66,25 +66,25 @@ class ForStatement extends Statement {
 	}
 
 	@Override
-	public void emitCode(StringBuilder code) {
+	public void emitCode(GluonOutput code) {
 		String testLabel = GluonLabels.createLabel(first, "test");
 		String endLabel = GluonLabels.createLabel(first, "end");
 		
-		code.append(GluonOutput.commentLine("For Statement"));
+		code.comment("For Statement");
 		if (preForAssign != null)
 			preForAssign.emitCode(code);
 		
-		code.append(GluonOutput.labelLine(testLabel));
+		code.label(testLabel);
 		conditionTest.emitCode(code);
-		code.append(GluonOutput.codeLine("TEST EAX, EAX"));
-		code.append(GluonOutput.codeLine("JZ " + endLabel));
+		code.code("TEST EAX, EAX");
+		code.code("JZ " + endLabel);
 		statements.emitCode(code);
 	
 		if (postForAssign != null)
 			postForAssign.emitCode(code);
-		code.append(GluonOutput.codeLine("JMP " + testLabel));
-		code.append(GluonOutput.labelLine(endLabel));
-		code.append(GluonOutput.commentLine("For End"));
+		code.code("JMP " + testLabel);
+		code.label(endLabel);
+		code.comment("For End");
 	}
 	
 }

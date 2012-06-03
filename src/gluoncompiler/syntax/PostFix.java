@@ -46,18 +46,17 @@ public class PostFix extends SyntaxObject {
 	}
 
 	@Override
-	public void emitCode(StringBuilder code) {
+	public void emitCode(GluonOutput code) {
 		if (value != null) {
 			value.emitCode(code);
-			return;
+		} else {
+			var.emitCode(code);
+
+			if (inc)
+				code.code("INC [" + GluonLibrary.varToLabel(var.getName()) + "]");
+			else if (dec)
+				code.code("DEC [" + GluonLibrary.varToLabel(var.getName()) + "]");
 		}
-		
-		var.emitCode(code);
-				
-		if (inc)
-			code.append(GluonOutput.codeLine("INC [" + GluonLibrary.varToLabel(var.getName()) + "]"));
-		else if (dec)
-			code.append(GluonOutput.codeLine("DEC [" + GluonLibrary.varToLabel(var.getName()) + "]"));
 	}
 
 	@Override

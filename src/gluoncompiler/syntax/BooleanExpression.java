@@ -42,36 +42,36 @@ class BooleanExpression extends SyntaxObject {
 	}
 
 	@Override
-	public void emitCode(StringBuilder code) {
+	public void emitCode(GluonOutput code) {
 		if (exp2 == null) {
 			exp1.emitCode(code);
 			return;
 		}
 		
 		exp1.emitCode(code);		
-		code.append(GluonOutput.codeLine("PUSH EAX"));
+		code.code("PUSH EAX");
 		exp2.emitCode(code);
-		code.append(GluonOutput.codeLine("POP EBX"));
-		code.append(GluonOutput.codeLine("CMP EAX, EBX"));
+		code.code("POP EBX");
+		code.code("CMP EAX, EBX");
 		
 		switch (compare){
 			case EQUALS:
-				code.append(GluonOutput.codeLine("SETE AL"));
+				code.code("SETE AL");
 				break;
 			case LESS_THAN:
-				code.append(GluonOutput.codeLine("SETG AL"));
+				code.code("SETG AL");
 				break;
 			case LESS_THAN_OR_EQUALS:
-				code.append(GluonOutput.codeLine("SETGE AL"));
+				code.code("SETGE AL");
 				break;
 			case GREATER_THAN:
-				code.append(GluonOutput.codeLine("SETL AL"));
+				code.code("SETL AL");
 				break;
 			case GREATER_THAN_OR_EQUALS:
-				code.append(GluonOutput.codeLine("SETLE AL"));
+				code.code("SETLE AL");
 				break;
 			case NOT_EQUALS:
-				code.append(GluonOutput.codeLine("SETNE AL"));
+				code.code("SETNE AL");
 				break;
 			default:
 				throw new RuntimeException("Unknown compare type.");

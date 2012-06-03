@@ -1,5 +1,6 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonOutput;
 import gluoncompiler.GluonVariable;
 import gluoncompiler.Token;
 
@@ -33,7 +34,7 @@ class DefineVariable extends Statement {
 	}
 
 	@Override
-	public void emitCode(StringBuilder code) {
+	public void emitCode(GluonOutput code) {
 		GluonVariable.registerVariable(variable.getName());
 		if (assignExp != null) {
 			assignExp.emitCode(code);
