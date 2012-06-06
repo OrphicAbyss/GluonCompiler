@@ -19,22 +19,22 @@ public class Function extends SyntaxObject {
 
 	Token first;
 	Token funcName;
-	ArrayList<Token> parameters;
+	ArrayList<Variable> parameters;
 	ArrayList<Token> returns;
 	StatementGroup logic;
 	
 	public Function(Token next, ScopeObject parentScope){
 		first = next;
 		parameters = new ArrayList<>();
-		scope = new ScopeObject(parentScope);
+		scope = new ScopeObject(parentScope, true);
 	}
 	
 	@Override
 	public Token parse() {
 		funcName = first.getNext();
-		if (!funcName.isIdentifier()){
+		if (!funcName.isIdentifier())
 			throw new RuntimeException("Expected identifier for function name, found: " + funcName);
-		}
+		
 		GluonFunction.registerFunction(funcName.getValue());
 		
 		Token test = funcName.getNext();
@@ -43,8 +43,9 @@ public class Function extends SyntaxObject {
 		
 		test = test.getNext();
 		while (test.isIdentifier()){
-			parameters.add(test);
-			test = test.getNext();
+			Variable param = new Variable(test, scope, true);
+			parameters.add(param);
+			test = param.parse(true);
 			if (test.isOperator(Operator.COMMA))
 				test = test.getNext();
 		}
@@ -89,37 +90,41 @@ public class Function extends SyntaxObject {
 		// Setup variables passed in on stack for use
 		int offset = 2 + 4 * parameters.size();
 		int used = 0;
-		for (Token parameter: parameters){
+		for (Variable parameter: parameters){
 			int stackOffset = offset - used;
 			used += 4;
-			code.code(parameter.getText() + " EQU " + stackOffset + "[bp]");
+			code.code(parameter.getLabel() + " EQU EBP + " + stackOffset);
 		}
 		// Function
 		code.label(funcLabel);
 		// Push BP
-		code.code("PUSH BP");
+		code.code("PUSH EBP");
 		// Mov BP, SP
-		code.code("MOV BP, SP");
+		code.code("MOV EBP, ESP");
+		// Local variables
+		scope.emitCreateScope(code);	
 		// Push all reg
 		code.code("PUSH EAX");
 		code.code("PUSH EBX");
 		code.code("PUSH ECX");
 		code.code("PUSH EDX");
 		// Actual function logic
+		code.comment("Function code start");
 		logic.emitCode(code);
+		code.comment("Function code end");
 		// Pop all reg
-		code.code("PUSH EDX");
-		code.code("PUSH ECX");
-		code.code("PUSH EBX");
-		code.code("PUSH EAX");
+		code.code("POP EDX");
+		code.code("POP ECX");
+		code.code("POP EBX");
+		code.code("POP EAX");
+		// Local variables
+		scope.emitDistroyScope(code);
 		// Pop BP
-		code.code("POP BP");
+		code.code("POP EBP");
 		// Ret paramaters
 		code.code("RET");
 		
-		for (Token parameter: parameters){
-			code.code("RESTORE " + parameter.getText());
-		}
+		scope.buildRestore(code, parameters, true);
 		code.comment("Function end: " + funcName.getValue());
 	}
 

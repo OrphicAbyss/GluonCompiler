@@ -14,7 +14,7 @@ Working so far:
 * Break
 * Function defs (Can parse with multiple input parameters and multiple return
 values but code output ignores inputs and outputs
-* Function calls (With no parameters or return values)
+* Function calls (With parameters but no return values)
 * Postfix operators (++,--)
 
 Compiles programs to ASM code. Can be compiled with Flat Assembler (FASM) and 

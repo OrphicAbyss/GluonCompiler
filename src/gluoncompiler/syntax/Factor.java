@@ -87,9 +87,9 @@ class Factor extends SyntaxObject {
 			subExpression.emitCode(code);
 		} else {
 			if (increment)
-				code.code("INC [" + GluonLibrary.varToLabel(value.getVariable().getName()) + "]");
+				code.code("INC " + value.getVariable().getLabelName());
 			else if (decrement)
-				code.code("DEC [" + GluonLibrary.varToLabel(value.getVariable().getName()) + "]");
+				code.code("DEC " + value.getVariable().getLabelName());
 			
 			value.emitCode(code);
 		}

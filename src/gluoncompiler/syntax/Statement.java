@@ -34,7 +34,7 @@ public class Statement extends SyntaxObject {
 		
 		if (test.isOperator(Operator.BRACKET_LEFT)) {
 			isFunctionCall = true;
-			functionCall = new FunctionCall(first);
+			functionCall = new FunctionCall(first, scope);
 			test = functionCall.parse();
 		} else if (test.isOperator()) {
 			isAssignment = true;

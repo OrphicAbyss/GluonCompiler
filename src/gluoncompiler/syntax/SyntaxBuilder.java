@@ -25,7 +25,6 @@ import java.io.File;
 public class SyntaxBuilder {
 	
 	public static void main(String[] args){
-		GluonVariable.init();
 		GluonFunction.init();
 		
 		GluonScanner scanner = new GluonScanner(new File("testProg.txt"));
@@ -42,8 +41,8 @@ public class SyntaxBuilder {
 		
 		sb.emitCode(out);
 		GluonLibrary.printASMEnd(out);
-		GluonLibrary.printVariables(out, GluonVariable.getVariables());
-
+		GluonLibrary.printVariableFunction(out);
+		
 		System.out.println(out.getOutput());
 	}
 

@@ -28,6 +28,7 @@ public class AssignmentExpression extends SyntaxObject {
 			Operator testOp = test.getOperator();
 			if (testOp.name().startsWith("ASSIGN")) {
 				variable = new Variable(first, scope);
+				variable.parse();
 				assignmentOp = testOp;
 				test = test.getNext();
 				assignmentExp = new BooleanExpression(test, scope);
@@ -46,33 +47,33 @@ public class AssignmentExpression extends SyntaxObject {
 	@Override
 	public void emitCode(GluonOutput code) {
 		if (variable != null){
-			String varName = GluonLibrary.varToLabel(variable.getName());
+			String varName = variable.getLabelName();
 			assignmentExp.emitCode(code);
 			
 			switch (assignmentOp){
 				case ASSIGN:
 					break;
 				case ASSIGN_ADD:
-					code.code("MOV EBX,[" + varName + "]");
-					code.code("ADD EAX,EBX");
+					code.code("MOV EBX, " + varName);
+					code.code("ADD EAX, EBX");
 					break;
 				case ASSIGN_SUBTRACT:
 					code.code("MOV EBX, EAX");
-					code.code("MOV EAX,[" + varName + "]");
-					code.code("SUB EAX,EBX");
+					code.code("MOV EAX, " + varName);
+					code.code("SUB EAX, EBX");
 					break;
 				case ASSIGN_MULTIPLY:
-					code.code("MOV EBX,[" + varName + "]");
-					code.code("IMUL EAX,EBX");
+					code.code("MOV EBX, " + varName);
+					code.code("IMUL EAX, EBX");
 					break;
 				case ASSIGN_DIVIDE:
 					code.code("MOV EBX, EAX");
-					code.code("MOV EDX, 0");
-					code.code("MOV EAX,[" + varName + "]");
+					code.code("XOR EDX, EDX");
+					code.code("MOV EAX, " + varName);
 					code.code("IDIV EBX");
 					break;
 			}
-			code.code("MOV [" + varName + "],EAX");
+			code.code("MOV " + varName + ", EAX");
 		} else {
 			expression.emitCode(code);
 		}

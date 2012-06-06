@@ -84,22 +84,20 @@ public class GluonLibrary {
 		output.outputLine("INT 21h",true);
 	}
 
-	public static void printVariables(GluonOutput output, Collection<String> variables){
-		output.outputLine("; print all vars", false);
-		output.outputLine("print:", false);
-		for (String var: variables){
-			output.outputLine("MOV AX, " + varNameToLabel(var), true);
-			output.outputLine("CALL print_string", true);
-			output.outputLine("MOV BX, 10",true);
-			output.outputLine("MOV EAX, [" + varToLabel(var) + "]", true);
-			output.outputLine("CALL print_number", true);
-		}
-		output.outputLine("RET",true);
-		output.outputLine("", false);
-		output.outputLine("; data section", false);
-		for (String var: variables){
-			output.outputLine(varNameToLabel(var) + "\tdb\t\"" + var + "\",00h", true);
-			output.outputLine(varToLabel(var) + "\tdd\t?", true);
-		}
+	public static void printVariableFunction(GluonOutput output){
+		output.comment("; print all vars");
+		output.code("variable EQU EBP+6");
+		output.label("print");
+        output.code("PUSH EBP");
+        output.code("MOV EBP, ESP");
+        output.code("PUSH EBX");
+        output.code("PUSH EAX");
+		output.code("MOV EAX, [variable]");
+		output.code("MOV EBX, 10");
+		output.code("CALL print_number");
+		output.code("POP EAX");
+        output.code("POP EBX");
+        output.code("POP EBP");
+		output.code("RET");
 	}
 }

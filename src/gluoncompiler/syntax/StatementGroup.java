@@ -19,7 +19,7 @@ public class StatementGroup extends SyntaxObject {
 		children = new ArrayList<>();
 		targetKeywords = targets;
 		targetOperators = new Operator[0];
-		scope = new ScopeObject(parentScope);
+		scope = new ScopeObject(parentScope, false);
 	}
 	
 	public StatementGroup(Token start, Operator[] targets, ScopeObject parentScope) {
@@ -27,7 +27,7 @@ public class StatementGroup extends SyntaxObject {
 		children = new ArrayList<>();
 		targetKeywords = new Keyword[0];
 		targetOperators = targets;
-		scope = new ScopeObject(parentScope);
+		scope = new ScopeObject(parentScope, false);
 	}
 	
 	@Override

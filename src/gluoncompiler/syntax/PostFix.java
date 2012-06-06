@@ -53,9 +53,9 @@ public class PostFix extends SyntaxObject {
 			var.emitCode(code);
 
 			if (inc)
-				code.code("INC [" + GluonLibrary.varToLabel(var.getName()) + "]");
+				code.code("INC " + var.getLabelName());
 			else if (dec)
-				code.code("DEC [" + GluonLibrary.varToLabel(var.getName()) + "]");
+				code.code("DEC " + var.getLabelName());
 		}
 	}
 

@@ -1,7 +1,6 @@
 package gluoncompiler.syntax;
 
 import gluoncompiler.GluonOutput;
-import gluoncompiler.GluonVariable;
 import gluoncompiler.Token;
 
 /**
@@ -24,18 +23,17 @@ class DefineVariable extends Statement {
 			throw new RuntimeException("Expected identifier, found: " + var);
 
 		variable = new Variable(var, scope);
-		Token test = variable.parse();
-		
+		Token test = variable.parse(true);		
 		if (test.isOperator()){
 			assignExp = new AssignmentExpression(var, scope);
 			test = assignExp.parse();
 		}
+
 		return test;
 	}
 
 	@Override
 	public void emitCode(GluonOutput code) {
-		GluonVariable.registerVariable(variable.getName());
 		if (assignExp != null) {
 			assignExp.emitCode(code);
 		}

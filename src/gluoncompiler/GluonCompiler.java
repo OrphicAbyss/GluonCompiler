@@ -33,16 +33,15 @@ public class GluonCompiler {
 		syntaxBuilder.buildTree();
 		
 		Error.init(scanner);
-		GluonVariable.init();
-
+		
 		output = new GluonOutput();
 		GluonLibrary.printASMStart(output);
 
 		syntaxBuilder.emitCode(output);
 
 		GluonLibrary.printASMEnd(output);
-		GluonLibrary.printVariables(output, GluonVariable.getVariables());
-
+		GluonLibrary.printVariableFunction(output);
+		
 		System.out.print(output.getOutput());
 	}
 
