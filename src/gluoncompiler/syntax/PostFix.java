@@ -1,6 +1,5 @@
 package gluoncompiler.syntax;
 
-import gluoncompiler.GluonLibrary;
 import gluoncompiler.GluonOutput;
 import gluoncompiler.Operator;
 import gluoncompiler.Token;

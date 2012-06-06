@@ -1,6 +1,5 @@
 package gluoncompiler.syntax;
 
-import gluoncompiler.GluonLibrary;
 import gluoncompiler.GluonOutput;
 import gluoncompiler.Operator;
 import gluoncompiler.Token;
@@ -12,13 +11,19 @@ import gluoncompiler.Token;
  * TODO: add level under for postfix operators
  */
 class Factor extends SyntaxObject {
+	
 	Token first;
+
 	boolean unaryMinus;
 	boolean unaryPlus;
-	boolean increment;
-	boolean decrement;
+	boolean preIncrement;
+	boolean postIncrement;
+	boolean preDecrement;
+	boolean postDecrement;
+
 	BooleanExpression subExpression;
-	PostFix value;
+	Variable variable;
+	LiteralNumber literal;
 	
 	public Factor(Token start, ScopeObject parentScopet) {
 		first = start;
@@ -45,11 +50,11 @@ class Factor extends SyntaxObject {
 					test = test.getNext();
 					break;
 				case INCREMENT:
-					increment = true;
+					preIncrement = true;
 					test = test.getNext();
 					break;
 				case DECREMENT:
-					decrement = true;
+					preDecrement = true;
 					test = test.getNext();
 					break;
 				default:
@@ -68,14 +73,23 @@ class Factor extends SyntaxObject {
 
 			return test.getNext();
 		} else if (test.isLiteral()) {
-			if (increment || decrement)
+			if (preIncrement || preDecrement)
 				throw new RuntimeException("Increment/decrement operators can't operate on literals. Found: " + test.toString());
 			
-			value = new PostFix(test, scope);
-			return value.parse();
+			literal = new LiteralNumber(test, scope);
+			return literal.parse();
 		} else if (test.isIdentifier()) {
-			value = new PostFix(test, scope);
-			return value.parse();
+			variable = new Variable(test, scope);
+			test = variable.parse();
+			if (test.isOperator(Operator.INCREMENT)) {
+				postIncrement = true;
+				test = test.getNext();
+			} else if (test.isOperator(Operator.DECREMENT)) {
+				postDecrement = true;
+				test = test.getNext();
+			}
+
+			return test;
 		} else {
 			throw new RuntimeException("Unknown token: " + test);
 		}
@@ -85,13 +99,20 @@ class Factor extends SyntaxObject {
 	public void emitCode(GluonOutput code) {
 		if (subExpression != null){
 			subExpression.emitCode(code);
+		} else if (literal != null) {
+			literal.emitCode(code);
 		} else {
-			if (increment)
-				code.code("INC " + value.getVariable().getLabelName());
-			else if (decrement)
-				code.code("DEC " + value.getVariable().getLabelName());
+			if (preIncrement)
+				code.code("INC " + variable.getLabelName());
+			else if (preDecrement)
+				code.code("DEC " + variable.getLabelName());
 			
-			value.emitCode(code);
+			variable.emitCode(code);
+			
+			if (postIncrement)
+				code.code("INC " + variable.getLabelName());
+			else
+				code.code("DEC " + variable.getLabelName());
 		}
 		
 		if (unaryMinus){
@@ -112,13 +133,24 @@ class Factor extends SyntaxObject {
 			} else if (unaryPlus) {
 				printLevel(level);
 				printLn("+");
-			} else if (increment) {
+			} else if (preIncrement) {
 				printLevel(level);
 				printLn("INCREMENT THEN USE");
-			} else if (decrement) {
+			} else if (preDecrement) {
 				printLn("DECREMENT THEN USE");
 			}
-			value.print(level);
+			
+			if (postIncrement) {
+				printLevel(level);
+				printLn("INCREMENT AFTER USE");
+			} else if (postDecrement) {
+				printLevel(level);
+				printLn("DECREMENT AFTER USE");
+			}
+			if (variable != null)
+				variable.print(level);
+			else
+				literal.print(level);
 		}
 	}
 	
