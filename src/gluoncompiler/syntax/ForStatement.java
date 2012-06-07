@@ -62,6 +62,8 @@ class ForStatement extends Statement {
 		statements = new StatementGroup(test, targets, scope);
 		test = statements.parse();
 		
+		if (!test.isKeyword(Keyword.END))
+			throw new RuntimeException("Expecting keyword 'END' to close 'IF' statement, found: " + test);
 		return test.getNext();
 	}
 

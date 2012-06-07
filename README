@@ -30,6 +30,7 @@ Future direction:
 * Support for different sized variables
 * Add scoping of variables
 * Finish function call/defs
+* Allow functions to accept literals and expressions as parameters
 * Add classes
 * Add scoping for class objects
 * More operator support

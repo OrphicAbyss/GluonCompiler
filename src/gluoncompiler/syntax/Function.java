@@ -79,7 +79,7 @@ public class Function extends SyntaxObject {
 		
 		if (!test.isOperator(Operator.BRACE_RIGHT))
 			throw new RuntimeException("Expected closing brace for function logic, found: " + test);
-		
+				
 		return test.getNext();
 	}
 
@@ -88,10 +88,10 @@ public class Function extends SyntaxObject {
 		code.comment("Function: " + funcName.getValue());
 		String funcLabel = GluonFunction.getLabel(funcName.getValue());
 		// Setup variables passed in on stack for use
-		int offset = 2 + 4 * parameters.size();
-		int used = 0;
+		int offset = 2;// + 4 * parameters.size();
+		int used = 4;
 		for (Variable parameter: parameters){
-			int stackOffset = offset - used;
+			int stackOffset = offset + used;
 			used += 4;
 			code.code(parameter.getLabel() + " EQU EBP + " + stackOffset);
 		}

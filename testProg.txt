@@ -1,24 +1,27 @@
-def main():{
+def main(): {
    var test = 1
    test += 1 + 1
    test -= 1
    test *= 2
    test /= 4
-   
+   print(test)
+
    if (test == 1)
       test = 10
    else
       test = 5
    end
    
+   print(test)
    var count=1
    while (count<30)
       count += 1
+      print(count)
       if (count >= 20)
          break
       end
    end
-   
+
    var value = 10
    var forValue = 0
    for (value = 1: value < 5: ++value)
@@ -27,14 +30,17 @@ def main():{
    testFunc(test, count, value, forValue)
 }
 
-def testFunc(one, two, three, four):{
+def printCount(max): {
+   var test
+   for (test = 1: test<max: test += 1)
+       print(test)
+   end
+}
+
+def testFunc(one, two, three, four): {
    print(one)
    print(two)
    print(three)
    print(four)
-   var test
-   for (test = 1: test<10: test += 1)
-       print(test)
-   end
 }
 .

@@ -49,8 +49,10 @@ public class FunctionCall extends SyntaxObject {
 	
 	@Override
 	public void emitCode(GluonOutput code) {
-		for (Variable param: parameters)
-			code.code("PUSH " + param.getLabelName());
+		for (int i=parameters.size()-1; i>=0; i--)
+			code.code("PUSH " + parameters.get(i).getLabelName());
+//		for (Variable param: parameters)
+//			code.code("PUSH " + param.getLabelName());
 		
 		code.code("CALL " + name);
 		
