@@ -71,13 +71,17 @@ class Factor extends SyntaxObject {
 			if (!test.isOperator(Operator.BRACKET_RIGHT))
 				throw new RuntimeException("Expected closing bracket. Found: " + test);
 
-			return test.getNext();
+			test = test.getNext();
 		} else if (test.isLiteral()) {
 			if (preIncrement || preDecrement)
 				throw new RuntimeException("Increment/decrement operators can't operate on literals. Found: " + test.toString());
 			
 			literal = new LiteralNumber(test, scope);
-			return literal.parse();
+			test = literal.parse();
+			if (unaryMinus) {
+				literal.setNegative();
+				unaryMinus = false;
+			}
 		} else if (test.isIdentifier()) {
 			variable = new Variable(test, scope);
 			test = variable.parse();
@@ -88,11 +92,10 @@ class Factor extends SyntaxObject {
 				postDecrement = true;
 				test = test.getNext();
 			}
-
-			return test;
 		} else {
 			throw new RuntimeException("Unknown token: " + test);
 		}
+		return test;
 	}
 
 	@Override
@@ -111,7 +114,7 @@ class Factor extends SyntaxObject {
 			
 			if (postIncrement)
 				code.code("INC " + variable.getLabelName());
-			else
+			else if (postDecrement)
 				code.code("DEC " + variable.getLabelName());
 		}
 		

@@ -34,4 +34,8 @@ public class LiteralNumber extends SyntaxObject {
 		printLevel(level);
 		printLn("NUMBER " + value);
 	}
+	
+	public void setNegative(){
+		value = "-" + value;
+	}
 }

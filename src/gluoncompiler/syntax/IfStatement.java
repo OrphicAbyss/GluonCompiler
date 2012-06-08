@@ -10,9 +10,9 @@ import gluoncompiler.*;
  *                 End
  */
 public class IfStatement extends Statement {
-	private SyntaxObject testExpression;
-	private SyntaxObject trueCondition;
-	private SyntaxObject falseCondition;
+	private BooleanExpression testExpression;
+	private StatementGroup trueCondition;
+	private StatementGroup falseCondition;
 
 	public IfStatement(Token start, ScopeObject parentScope) {
 		super(start, parentScope);
@@ -63,10 +63,11 @@ public class IfStatement extends Statement {
 		code.comment("If Statement");
 		testExpression.emitCode(code);
 		code.code("TEST EAX, EAX");
-		if (falseCondition == null)
-			code.code("JZ " + labelEnd);
-		else
+		
+		if (hasElseBlock())
 			code.code("JZ " + labelElse);
+		else
+			code.code("JZ " + labelEnd);
 		trueCondition.emitCode(code);
 		if (falseCondition != null){
 			code.code("JMP " + labelEnd);
@@ -92,5 +93,9 @@ public class IfStatement extends Statement {
 			printLn("ELSE");
 			falseCondition.print(level + 1);
 		}
+	}
+	
+	public boolean hasElseBlock() {
+		return (falseCondition != null);
 	}
 }

@@ -90,4 +90,7 @@ class BooleanExpression extends SyntaxObject {
 		}
 	}
 	
+	public boolean hasRelationship() {
+		return (exp2 != null);
+	}
 }
