@@ -15,8 +15,9 @@ class Term extends SyntaxObject {
 	ArrayList<Factor> factors;
 	ArrayList<Operator> ops;
 	
-	public Term(Token test) {
+	public Term(Token test, ScopeObject parentScope) {
 		first = test;
+		scope = parentScope;
 		factors = new ArrayList<>();
 		ops = new ArrayList<>();
 	}
@@ -25,14 +26,14 @@ class Term extends SyntaxObject {
 	public Token parse() {
 		Token test = first;
 		
-		factor = new Factor(test);
+		factor = new Factor(test, scope);
 		test = factor.parse();
 		
 		while (test.isOperator()) {
 			Operator testOp = test.getOperator();
 			if (Operator.MULTIPLY.equals(testOp) || Operator.DIVIDE.equals(testOp)) {
 				ops.add(testOp);
-				Factor f = new Factor(test.getNext());
+				Factor f = new Factor(test.getNext(), scope);
 				factors.add(f);
 				test = f.parse();
 			} else {
@@ -44,26 +45,24 @@ class Term extends SyntaxObject {
 	}
 
 	@Override
-	public String emitCode() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(factor.emitCode());
+	public void emitCode(GluonOutput code) {
+		factor.emitCode(code);
 		for (int i=0; i<factors.size(); i++) {
-			sb.append(GluonOutput.codeLine("PUSH EAX"));
-			sb.append(factors.get(i).emitCode());
+			code.code("PUSH EAX");
+			factors.get(i).emitCode(code);
 			switch (ops.get(i)) {
 				case MULTIPLY:
-					sb.append(GluonOutput.codeLine("POP EBX"));
-					sb.append(GluonOutput.codeLine("IMUL EAX,EBX"));
+					code.code("POP EBX");
+					code.code("IMUL EAX,EBX");
 					break;
 				case DIVIDE:
-					sb.append(GluonOutput.codeLine("MOV EBX, EAX"));
-					sb.append(GluonOutput.codeLine("MOV EDX, 0"));
-					sb.append(GluonOutput.codeLine("POP EAX"));
-					sb.append(GluonOutput.codeLine("IDIV EBX"));
+					code.code("MOV EBX, EAX");
+					code.code("MOV EDX, 0");
+					code.code("POP EAX");
+					code.code("IDIV EBX");
 					break;
 			}
 		}
-		return sb.toString();
 	}
 
 	@Override

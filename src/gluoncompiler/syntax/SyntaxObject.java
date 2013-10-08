@@ -1,13 +1,17 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Token;
 
 /**
  * Base class for syntax objects
  */
 public abstract class SyntaxObject {
+	
+	protected ScopeObject scope;
+	
 	public abstract Token parse();
-	public abstract String emitCode();
+	public abstract void emitCode(GluonOutput code);
 	public abstract void print(int level);
 	
 	protected void printClass(int level) {

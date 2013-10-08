@@ -1,13 +1,9 @@
 package gluoncompiler.syntax;
 
-import gluoncompiler.GluonLabels;
-import gluoncompiler.GluonOutput;
-import gluoncompiler.Keyword;
-import gluoncompiler.Operator;
-import gluoncompiler.Token;
+import gluoncompiler.*;
 
 /**
- * For Statement := For <AssignmentExpression>:<BooleanExpression>:<AssignmentExpression>
+ * For Statement := For '(' <AssignmentExpression> : <BooleanExpression> : <AssignmentExpression> ')'
  *						<StatementGroup>
  *					End
  */
@@ -18,71 +14,79 @@ class ForStatement extends Statement {
 	AssignmentExpression postForAssign;
 	StatementGroup statements;
 	
-	public ForStatement(Token next) {
-		super(next);
+	public ForStatement(Token next, ScopeObject parentScope) {
+		super(next, parentScope);
 	}
 
 	@Override
 	public Token parse() {
 		Token test = first.getNext();
 		
-		if (!test.isOperator()){
-			preForAssign = new AssignmentExpression(test);
+		if (!test.isOperator(Operator.BRACKET_LEFT))
+			throw new RuntimeException("Expected '(' after FOR, found: " + test.toString());
+		
+		test = test.getNext();
+		if (!test.isOperator()) {
+			preForAssign = new AssignmentExpression(test, scope);
 			test = preForAssign.parse();
 		}
 		
-		if (!test.isOperator() || !Operator.COLON.equals(test.getOperator()))
+		if (!test.isOperator(Operator.COLON))
 			throw new RuntimeException("Expected Colon Operator, found: " + test.toString()); 
 		
 		test = test.getNext();
-		if (!test.isOperator()){
-			conditionTest = new BooleanExpression(test);
+		if (!test.isOperator()) {
+			conditionTest = new BooleanExpression(test, scope);
 			test = conditionTest.parse();
 		}
 		
-		if (!test.isOperator() || !Operator.COLON.equals(test.getOperator()))
+		if (!test.isOperator(Operator.COLON))
 			throw new RuntimeException("Expected Colon Operator, found: " + test.toString());
 		
+		
 		test = test.getNext();
-		if (!test.isNewline()){
-			postForAssign = new AssignmentExpression(test);
+		if (!test.isOperator(Operator.BRACKET_RIGHT)) {
+			postForAssign = new AssignmentExpression(test, scope);
 			test = postForAssign.parse();
 		}
 		
+		if (!test.isOperator(Operator.BRACKET_RIGHT))
+			throw new RuntimeException("Expected ')' after post for loop expression, found: " + test.toString());
+		
+		test = test.getNext();
 		if (!test.isNewline())
 			throw new RuntimeException("Expected Newline, found: " + test.toString());
 		
 		test = test.getNext();
 		Keyword[] targets = { Keyword.END };		
-		statements = new StatementGroup(test, targets);
+		statements = new StatementGroup(test, targets, scope);
 		test = statements.parse();
 		
+		if (!test.isKeyword(Keyword.END))
+			throw new RuntimeException("Expecting keyword 'END' to close 'IF' statement, found: " + test);
 		return test.getNext();
 	}
 
 	@Override
-	public String emitCode() {
+	public void emitCode(GluonOutput code) {
 		String testLabel = GluonLabels.createLabel(first, "test");
 		String endLabel = GluonLabels.createLabel(first, "end");
-		StringBuilder sb = new StringBuilder();
 		
-		sb.append(GluonOutput.commentLine("For Statement"));
+		code.comment("For Statement");
 		if (preForAssign != null)
-			sb.append(preForAssign.emitCode());
+			preForAssign.emitCode(code);
 		
-		sb.append(GluonOutput.labelLine(testLabel));
-		sb.append(conditionTest.emitCode());
-		sb.append(GluonOutput.codeLine("TEST EAX, EAX"));
-		sb.append(GluonOutput.codeLine("JZ " + endLabel));
-		sb.append(statements.emitCode());
+		code.label(testLabel);
+		conditionTest.emitCode(code);
+		code.code("TEST EAX, EAX");
+		code.code("JZ " + endLabel);
+		statements.emitCode(code);
 	
 		if (postForAssign != null)
-			sb.append(postForAssign.emitCode());
-		sb.append(GluonOutput.codeLine("JMP " + testLabel));
-		sb.append(GluonOutput.labelLine(endLabel));
-		sb.append(GluonOutput.commentLine("For End"));
-		
-		return sb.toString();
+			postForAssign.emitCode(code);
+		code.code("JMP " + testLabel);
+		code.label(endLabel);
+		code.comment("For End");
 	}
 	
 }

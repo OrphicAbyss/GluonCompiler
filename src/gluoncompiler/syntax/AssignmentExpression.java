@@ -16,8 +16,9 @@ public class AssignmentExpression extends SyntaxObject {
 	private BooleanExpression assignmentExp;
 	private BooleanExpression expression;
 	
-	public AssignmentExpression(Token next){
+	public AssignmentExpression(Token next, ScopeObject parentScope){
 		first = next;
+		scope = parentScope;
 	}
 	
 	@Override
@@ -25,59 +26,57 @@ public class AssignmentExpression extends SyntaxObject {
 		Token test = first.getNext();
 		if (test.isOperator()) {
 			Operator testOp = test.getOperator();
-			if (testOp.name().startsWith("ASSIGN")){
-				variable = new Variable(first);
+			if (testOp.name().startsWith("ASSIGN")) {
+				variable = new Variable(first, scope);
+				variable.parse();
 				assignmentOp = testOp;
 				test = test.getNext();
-				assignmentExp = new BooleanExpression(test);
+				assignmentExp = new BooleanExpression(test, scope);
 				test = assignmentExp.parse();
 			}
 		}
 		
 		if (variable == null) {
-			expression = new BooleanExpression(first);
+			expression = new BooleanExpression(first, scope);
+			test = expression.parse();
 		}
 		
 		return test;
 	}
 
 	@Override
-	public String emitCode() {
-		StringBuilder sb = new StringBuilder();
-		
+	public void emitCode(GluonOutput code) {
 		if (variable != null){
-			String varName = GluonLibrary.varToLabel(variable.getName());
-			sb.append(assignmentExp.emitCode());
+			String varName = variable.getLabelName();
+			assignmentExp.emitCode(code);
 			
 			switch (assignmentOp){
 				case ASSIGN:
 					break;
 				case ASSIGN_ADD:
-					sb.append(GluonOutput.codeLine("MOV EBX,[" + varName + "]"));
-					sb.append(GluonOutput.codeLine("ADD EAX,EBX"));
+					code.code("MOV EBX, " + varName);
+					code.code("ADD EAX, EBX");
 					break;
 				case ASSIGN_SUBTRACT:
-					sb.append(GluonOutput.codeLine("MOV EBX, EAX"));
-					sb.append(GluonOutput.codeLine("MOV EAX,[" + varName + "]"));
-					sb.append(GluonOutput.codeLine("SUB EAX,EBX"));
+					code.code("MOV EBX, EAX");
+					code.code("MOV EAX, " + varName);
+					code.code("SUB EAX, EBX");
 					break;
 				case ASSIGN_MULTIPLY:
-					sb.append(GluonOutput.codeLine("MOV EBX,[" + varName + "]"));
-					sb.append(GluonOutput.codeLine("IMUL EAX,EBX"));
+					code.code("MOV EBX, " + varName);
+					code.code("IMUL EAX, EBX");
 					break;
 				case ASSIGN_DIVIDE:
-					sb.append(GluonOutput.codeLine("MOV EBX, EAX"));
-					sb.append(GluonOutput.codeLine("MOV EDX, 0"));
-					sb.append(GluonOutput.codeLine("MOV EAX,[" + varName + "]"));
-					sb.append(GluonOutput.codeLine("IDIV EBX"));
+					code.code("MOV EBX, EAX");
+					code.code("XOR EDX, EDX");
+					code.code("MOV EAX, " + varName);
+					code.code("IDIV EBX");
 					break;
 			}
-			sb.append(GluonOutput.codeLine("MOV [" + varName + "],EAX"));
+			code.code("MOV " + varName + ", EAX");
 		} else {
-			sb.append(expression.emitCode());
+			expression.emitCode(code);
 		}
-		
-		return sb.toString();
 	}
 
 	@Override

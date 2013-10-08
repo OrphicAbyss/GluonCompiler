@@ -1,7 +1,11 @@
 package gluoncompiler;
 
-import gluoncompiler.syntax.*;
+import gluoncompiler.syntax.SyntaxBuilder;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Simple compiler for language code named 'Gluon'
@@ -26,6 +30,8 @@ public class GluonCompiler {
 	
 	/** Main code compiling */
 	public static void Init() {
+        GluonFunction.init();
+        
 		tokeniser = new Tokeniser(scanner);
 		tokeniser.tokenise();
 		
@@ -33,16 +39,15 @@ public class GluonCompiler {
 		syntaxBuilder.buildTree();
 		
 		Error.init(scanner);
-		GluonVariable.init();
-
+		
 		output = new GluonOutput();
 		GluonLibrary.printASMStart(output);
 
-		output.append(syntaxBuilder.emitCode());
+		syntaxBuilder.emitCode(output);
 
 		GluonLibrary.printASMEnd(output);
-		GluonLibrary.printVariables(output, GluonVariable.getVariables());
-
+		GluonLibrary.printVariableFunction(output);
+		
 		System.out.print(output.getOutput());
 	}
 
@@ -66,5 +71,21 @@ public class GluonCompiler {
 		}
 
 		Init();
+        if (args.length == 2) {
+            FileWriter fw = null;
+            try {
+                File file = new File(args[1]);
+                fw = new FileWriter(file);
+                fw.append(output.getOutput());
+            } catch (IOException ex) {
+                Logger.getLogger(GluonCompiler.class.getName()).log(Level.SEVERE, null, ex);
+            } finally {
+                try {
+                    fw.close();
+                } catch (IOException ex) {
+                    Logger.getLogger(GluonCompiler.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        }
 	}
 }

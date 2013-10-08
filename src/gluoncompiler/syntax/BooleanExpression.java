@@ -13,14 +13,15 @@ class BooleanExpression extends SyntaxObject {
 	private Expression exp2;
 	private Operator compare;
 	
-	public BooleanExpression(Token next) {
+	public BooleanExpression(Token next, ScopeObject parentScope) {
 		first = next;
+		scope = parentScope;
 	}
 
 	@Override
 	public Token parse() {
 		Token test = first;
-		exp1 = new Expression(test);
+		exp1 = new Expression(test, scope);
 		test = exp1.parse();
 		
 		if (test.isOperator()){
@@ -33,7 +34,7 @@ class BooleanExpression extends SyntaxObject {
 				|| Operator.LESS_THAN_OR_EQUALS.equals(testOp)) {
 				compare = testOp;
 				test = test.getNext();
-				exp2 = new Expression(test);
+				exp2 = new Expression(test, scope);
 				test = exp2.parse();
 			}
 		}
@@ -41,41 +42,40 @@ class BooleanExpression extends SyntaxObject {
 	}
 
 	@Override
-	public String emitCode() {
-		if (exp2 == null)
-			return exp1.emitCode();
+	public void emitCode(GluonOutput code) {
+		if (exp2 == null) {
+			exp1.emitCode(code);
+			return;
+		}
 		
-		StringBuilder sb = new StringBuilder();
-		sb.append(exp1.emitCode());		
-		sb.append(GluonOutput.codeLine("PUSH EAX"));
-		sb.append(exp2.emitCode());
-		sb.append(GluonOutput.codeLine("POP EBX"));
-		sb.append(GluonOutput.codeLine("CMP EAX, EBX"));
+		exp1.emitCode(code);		
+		code.code("PUSH EAX");
+		exp2.emitCode(code);
+		code.code("POP EBX");
+		code.code("CMP EAX, EBX");
 		
 		switch (compare){
 			case EQUALS:
-				sb.append(GluonOutput.codeLine("SETE AL"));
+				code.code("SETE AL");
 				break;
 			case LESS_THAN:
-				sb.append(GluonOutput.codeLine("SETG AL"));
+				code.code("SETG AL");
 				break;
 			case LESS_THAN_OR_EQUALS:
-				sb.append(GluonOutput.codeLine("SETGE AL"));
+				code.code("SETGE AL");
 				break;
 			case GREATER_THAN:
-				sb.append(GluonOutput.codeLine("SETL AL"));
+				code.code("SETL AL");
 				break;
 			case GREATER_THAN_OR_EQUALS:
-				sb.append(GluonOutput.codeLine("SETLE AL"));
+				code.code("SETLE AL");
 				break;
 			case NOT_EQUALS:
-				sb.append(GluonOutput.codeLine("SETNE AL"));
+				code.code("SETNE AL");
 				break;
 			default:
 				throw new RuntimeException("Unknown compare type.");
 		}
-		
-		return sb.toString();
 	}
 
 	@Override
@@ -90,4 +90,7 @@ class BooleanExpression extends SyntaxObject {
 		}
 	}
 	
+	public boolean hasRelationship() {
+		return (exp2 != null);
+	}
 }

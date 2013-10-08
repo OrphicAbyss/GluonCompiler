@@ -1,5 +1,6 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Keyword;
 import gluoncompiler.Token;
 import java.util.ArrayList;
@@ -15,13 +16,14 @@ public class Program extends SyntaxObject {
 	public Program(Token start) {
 		first = start;
 		functions = new ArrayList<>();
+		scope = new ScopeObject();
 	}
 	
 	@Override
 	public Token parse() {
 		Token test = first;
 		while (test.isKeyword(Keyword.DEF)){
-			Function func = new Function(test);
+			Function func = new Function(test, scope);
 			test = func.parse();
 			functions.add(func);
 			
@@ -34,12 +36,9 @@ public class Program extends SyntaxObject {
 	}
 	
 	@Override
-	public String emitCode() {
-		StringBuilder sb = new StringBuilder();
+	public void emitCode(GluonOutput code) {
 		for (Function func: functions)
-			sb.append(func.emitCode());
-		
-		return sb.toString();
+			func.emitCode(code);
 	}
 
 	@Override

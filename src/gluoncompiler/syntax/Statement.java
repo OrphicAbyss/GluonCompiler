@@ -1,5 +1,6 @@
 package gluoncompiler.syntax;
 
+import gluoncompiler.GluonOutput;
 import gluoncompiler.Operator;
 import gluoncompiler.Token;
 
@@ -10,6 +11,7 @@ import gluoncompiler.Token;
  * Assignment Expression := <Identifier> (=|+=|-=|*=|/=) <BooleanExpression>
  */
 public class Statement extends SyntaxObject {
+	
 	Token first;
 	String ident;
 	boolean isFunctionCall;
@@ -18,10 +20,11 @@ public class Statement extends SyntaxObject {
 	AssignmentExpression assignmentExp;
 	FunctionCall functionCall;
 	
-	public Statement(Token next){
+	public Statement(Token next, ScopeObject parentScope) {
 		first = next;
 		isFunctionCall = false;
 		isAssignment = false;
+		scope = parentScope;
 	}
 	
 	@Override
@@ -29,30 +32,27 @@ public class Statement extends SyntaxObject {
 		ident = first.getValue();
 		Token test = first.getNext();		
 		
-		if (test.isOperator()){
-			Operator testOp = test.getOperator();
-			if (Operator.BRACKET_LEFT.equals(testOp)){
-				isFunctionCall = true;
-				functionCall = new FunctionCall(first);
-				test = functionCall.parse();
-			} else {
-				isAssignment = true;
-				assignmentExp = new AssignmentExpression(first);
-				test = assignmentExp.parse();
-			}
+		if (test.isOperator(Operator.BRACKET_LEFT)) {
+			isFunctionCall = true;
+			functionCall = new FunctionCall(first, scope);
+			test = functionCall.parse();
+		} else if (test.isOperator()) {
+			isAssignment = true;
+			assignmentExp = new AssignmentExpression(first, scope);
+			test = assignmentExp.parse();
 		} else {
-			assert(false);
+			throw new RuntimeException("Expected '(' or '=', found: " + test);
 		}
 		
 		return test;
 	}
 
 	@Override
-	public String emitCode() {
+	public void emitCode(GluonOutput code) {
 		if (isAssignment){
-			return assignmentExp.emitCode();
+			assignmentExp.emitCode(code);
 		} else if (isFunctionCall){
-			return functionCall.emitCode();
+			functionCall.emitCode(code);
 		} else {
 			throw new RuntimeException("Emit Code: Unknown statement type.");
 		}	

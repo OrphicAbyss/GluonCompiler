@@ -7,11 +7,11 @@ import gluoncompiler.Token;
 import java.util.ArrayList;
 
 /**
- * Function Def :=  def <Identifier>(<Paramaters>):<Returns> {
+ * Function Def :=  def <Identifier>(<Paramaters>)[:(<Returns>)] {
  *						<Statement Group>
  *                  }
  * 
- * Paramaters := [<Identifier>[, <Identifier>]+]
+ * Parameters := [<Identifier>[, <Identifier>]+]
  * 
  * Returns := [<Identifier>[, <Identifier>]+]
  */
@@ -19,21 +19,22 @@ public class Function extends SyntaxObject {
 
 	Token first;
 	Token funcName;
-	ArrayList<Token> paramaters;
+	ArrayList<Variable> parameters;
 	ArrayList<Token> returns;
 	StatementGroup logic;
 	
-	public Function(Token next){
+	public Function(Token next, ScopeObject parentScope){
 		first = next;
-		paramaters = new ArrayList<>();
+		parameters = new ArrayList<>();
+		scope = new ScopeObject(parentScope, true);
 	}
 	
 	@Override
 	public Token parse() {
 		funcName = first.getNext();
-		if (!funcName.isIdentifier()){
+		if (!funcName.isIdentifier())
 			throw new RuntimeException("Expected identifier for function name, found: " + funcName);
-		}
+		
 		GluonFunction.registerFunction(funcName.getValue());
 		
 		Token test = funcName.getNext();
@@ -42,8 +43,9 @@ public class Function extends SyntaxObject {
 		
 		test = test.getNext();
 		while (test.isIdentifier()){
-			paramaters.add(test);
-			test = test.getNext();
+			Variable param = new Variable(test, scope, true);
+			parameters.add(param);
+			test = param.parse(true);
 			if (test.isOperator(Operator.COMMA))
 				test = test.getNext();
 		}
@@ -52,16 +54,25 @@ public class Function extends SyntaxObject {
 			throw new RuntimeException("Expected ')' for function parmater list, found: " + test);
 		
 		test = test.getNext();
-		if (!test.isOperator(Operator.COLON))
-			throw new RuntimeException("Expected ':' in function def, found: " + test);
-		
-		test = test.getNext();
-		while (test.isIdentifier()){
-			returns.add(test);
-			test = test.getNext();
-			if (test.isOperator(Operator.COMMA))
-				test = test.getNext();
-		}
+		if (!test.isOperator(Operator.COLON) && !test.isOperator(Operator.BRACE_LEFT))
+			throw new RuntimeException("Expected ':' or '{' in function def, found: " + test);
+
+        if (test.isOperator(Operator.COLON)) {
+            test = funcName.getNext();
+            if (!test.isOperator(Operator.BRACKET_LEFT))
+                throw new RuntimeException("Expected '(' for function return list, found: " + test);
+
+            test = test.getNext();
+            while (test.isIdentifier()){
+                returns.add(test);
+                test = test.getNext();
+                if (test.isOperator(Operator.COMMA))
+                    test = test.getNext();
+            }
+
+            if (!test.isOperator(Operator.BRACKET_RIGHT))
+                throw new RuntimeException("Expected ')' for function return list, found: " + test);
+        }
 		
 		if (!test.isOperator(Operator.BRACE_LEFT))
 			throw new RuntimeException("Expected opening brace for function logic, found: " + test);
@@ -72,42 +83,58 @@ public class Function extends SyntaxObject {
 		
 		test = test.getNext();
 		Operator[] targets = {Operator.BRACE_RIGHT};
-		logic = new StatementGroup(test, targets);
+		logic = new StatementGroup(test, targets, scope);
 		test = logic.parse();
 		
 		if (!test.isOperator(Operator.BRACE_RIGHT))
 			throw new RuntimeException("Expected closing brace for function logic, found: " + test);
-		
+				
 		return test.getNext();
 	}
 
 	@Override
-	public String emitCode() {
-		StringBuilder sb = new StringBuilder();
+	public void emitCode(GluonOutput code) {
+		code.comment("Function: " + funcName.getValue());
 		String funcLabel = GluonFunction.getLabel(funcName.getValue());
-		sb.append(GluonOutput.commentLine("Function: " + funcName.getValue()));
-		sb.append(GluonOutput.labelLine(funcLabel));
+		// Setup variables passed in on stack for use
+		int offset = 2;// + 4 * parameters.size();
+		int used = 4;
+		for (Variable parameter: parameters){
+			int stackOffset = offset + used;
+			used += 4;
+			code.code(parameter.getLabel() + " EQU EBP + " + stackOffset);
+		}
+		// Function
+		code.label(funcLabel);
 		// Push BP
-		sb.append(GluonOutput.codeLine("PUSH BP"));
+		code.code("PUSH EBP");
 		// Mov BP, SP
-		sb.append(GluonOutput.codeLine("MOV BP, SP"));
+		code.code("MOV EBP, ESP");
+		// Local variables
+		scope.emitCreateScope(code);	
 		// Push all reg
-		sb.append(GluonOutput.codeLine("PUSH EAX"));
-		sb.append(GluonOutput.codeLine("PUSH EBX"));
-		sb.append(GluonOutput.codeLine("PUSH ECX"));
-		sb.append(GluonOutput.codeLine("PUSH EDX"));
+		code.code("PUSH EAX");
+		code.code("PUSH EBX");
+		code.code("PUSH ECX");
+		code.code("PUSH EDX");
 		// Actual function logic
-		sb.append(logic.emitCode());
+		code.comment("Function code start");
+		logic.emitCode(code);
+		code.comment("Function code end");
 		// Pop all reg
-		sb.append(GluonOutput.codeLine("PUSH EDX"));
-		sb.append(GluonOutput.codeLine("PUSH ECX"));
-		sb.append(GluonOutput.codeLine("PUSH EBX"));
-		sb.append(GluonOutput.codeLine("PUSH EAX"));
+		code.code("POP EDX");
+		code.code("POP ECX");
+		code.code("POP EBX");
+		code.code("POP EAX");
+		// Local variables
+		scope.emitDistroyScope(code);
 		// Pop BP
-		sb.append(GluonOutput.codeLine("POP BP"));
+		code.code("POP EBP");
 		// Ret paramaters
-		sb.append(GluonOutput.codeLine("RET"));
-		return sb.toString();
+		code.code("RET");
+		
+		scope.buildRestore(code, parameters, true);
+		code.comment("Function end: " + funcName.getValue());
 	}
 
 	@Override

@@ -14,8 +14,9 @@ class Expression extends SyntaxObject {
 	ArrayList<Term> terms;
 	ArrayList<Operator> ops;
 
-	public Expression(Token next) {
+	public Expression(Token next, ScopeObject parentScope) {
 		first = next;
+		scope = parentScope;
 		terms = new ArrayList<>();
 		ops = new ArrayList<>();
 	}
@@ -23,14 +24,14 @@ class Expression extends SyntaxObject {
 	@Override
 	public Token parse() {
 		Token test = first;
-		term = new Term(test);
+		term = new Term(test, scope);
 		test = term.parse();
 		
 		while (test.isOperator()) {
 			Operator testOp = test.getOperator();
 			if (Operator.ADD.equals(testOp) || Operator.SUBTRACT.equals(testOp)) {
 				ops.add(testOp);
-				Term t = new Term(test.getNext());
+				Term t = new Term(test.getNext(), scope);
 				terms.add(t);
 				test = t.parse();
 			} else {
@@ -42,25 +43,23 @@ class Expression extends SyntaxObject {
 	}
 
 	@Override
-	public String emitCode() {
-		StringBuilder sb = new StringBuilder();
-		sb.append(term.emitCode());
+	public void emitCode(GluonOutput code) {
+		term.emitCode(code);
 		for (int i=0; i<terms.size(); i++){
-			sb.append(GluonOutput.codeLine("PUSH EAX"));
-			sb.append(terms.get(i).emitCode());
+			code.code("PUSH EAX");
+			terms.get(i).emitCode(code);
 			switch (ops.get(i)) {
 				case ADD:
-					sb.append(GluonOutput.codeLine("POP EBX"));
-					sb.append(GluonOutput.codeLine("ADD EAX,EBX"));
+					code.code("POP EBX");
+					code.code("ADD EAX,EBX");
 					break;
 				case SUBTRACT:
-					sb.append(GluonOutput.codeLine("POP EBX"));
-					sb.append(GluonOutput.codeLine("SUB EAX,EBX"));
-					sb.append(GluonOutput.codeLine("NEG EAX"));
+					code.code("POP EBX");
+					code.code("SUB EAX,EBX");
+					code.code("NEG EAX");
 					break;
 			}
 		}
-		return sb.toString();
 	}
 
 	@Override

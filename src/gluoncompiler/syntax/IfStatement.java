@@ -1,75 +1,81 @@
 package gluoncompiler.syntax;
 
-import gluoncompiler.GluonLabels;
-import gluoncompiler.GluonOutput;
-import gluoncompiler.Keyword;
-import gluoncompiler.Token;
+import gluoncompiler.*;
 
 /**
- * If Statement := If <Boolean Expression> \n
+ * If Statement := If '(' <Boolean Expression> ')'
  *                     <StatementGroup>
  *				   [Else
  *					   <StatementGroup>]
  *                 End
  */
 public class IfStatement extends Statement {
-	private SyntaxObject testExpression;
-	private SyntaxObject trueCondition;
-	private SyntaxObject falseCondition;
+	private BooleanExpression testExpression;
+	private StatementGroup trueCondition;
+	private StatementGroup falseCondition;
 
-	public IfStatement(Token start) {
-		super(start);
+	public IfStatement(Token start, ScopeObject parentScope) {
+		super(start, parentScope);
 		falseCondition = null;
 	}
 	
 	@Override
 	public Token parse() {
-		testExpression = new BooleanExpression(first.getNext());
-		Token current = testExpression.parse();
-		assert(current.isNewline());
-		Keyword[] targets = {Keyword.ELSE,Keyword.END};
-		trueCondition = new StatementGroup(current.getNext(),targets);
-		current = trueCondition.parse();
+		Token test = first.getNext();
 		
-		if (Keyword.ELSE.equals(current.getKeyword())){
-			current = current.getNext();
-			assert(current.isNewline());
+		if (!test.isOperator(Operator.BRACKET_LEFT))
+			throw new RuntimeException("Expected '(' after IF, found: " + test.toString());
+		
+		testExpression = new BooleanExpression(test.getNext(), scope);
+		test = testExpression.parse();
+		
+		if (!test.isOperator(Operator.BRACKET_RIGHT))
+			throw new RuntimeException("Expected ')' after IF condition, found: " + test.toString());
+		
+		test = test.getNext();
+		if (!test.isNewline())
+			throw new RuntimeException("Expected newline, found: " + test.toString());
+		
+		Keyword[] targets = {Keyword.ELSE,Keyword.END};
+		trueCondition = new StatementGroup(test.getNext(), targets, scope);
+		test = trueCondition.parse();
+		
+		if (Keyword.ELSE.equals(test.getKeyword())) {
+			test = test.getNext();
+			assert(test.isNewline());
 			targets = new Keyword[1];
 			targets[0] = Keyword.END;
-			falseCondition = new StatementGroup(current.getNext(),targets);
-			current = falseCondition.parse();
+			falseCondition = new StatementGroup(test.getNext(), targets, scope);
+			test = falseCondition.parse();
 		}
 		
-		if (!Keyword.END.equals(current.getKeyword())){
-			throw new RuntimeException("Expected END keyword, found: " + current.toString());
-		}
+		if (!test.isKeyword(Keyword.END))
+			throw new RuntimeException("Expected END keyword, found: " + test.toString());
 		
-		current = current.getNext();
-		return current;
+		return test.getNext();
 	}
 
 	@Override
-	public String emitCode() {
+	public void emitCode(GluonOutput code) {
 		String labelEnd = GluonLabels.createLabel(first, "end");
 		String labelElse = GluonLabels.createLabel(first, "else");
 		
-		StringBuilder sb = new StringBuilder();
-		sb.append(GluonOutput.commentLine("If Statement"));
-		sb.append(testExpression.emitCode());
-		sb.append(GluonOutput.codeLine("TEST EAX, EAX"));
-		if (falseCondition == null)
-			sb.append(GluonOutput.codeLine("JZ " + labelEnd));
+		code.comment("If Statement");
+		testExpression.emitCode(code);
+		code.code("TEST EAX, EAX");
+		
+		if (hasElseBlock())
+			code.code("JZ " + labelElse);
 		else
-			sb.append(GluonOutput.codeLine("JZ " + labelElse));
-		sb.append(trueCondition.emitCode());
+			code.code("JZ " + labelEnd);
+		trueCondition.emitCode(code);
 		if (falseCondition != null){
-			sb.append(GluonOutput.codeLine("JMP " + labelEnd));
-			sb.append(GluonOutput.labelLine(labelElse));
-			sb.append(falseCondition.emitCode());
+			code.code("JMP " + labelEnd);
+			code.label(labelElse);
+			falseCondition.emitCode(code);
 		}
-		sb.append(GluonOutput.labelLine(labelEnd));
-		sb.append(GluonOutput.commentLine("End If"));
-		return sb.toString();
+		code.label(labelEnd);
+		code.comment("End If");
 	}
 	
 	@Override
@@ -87,5 +93,9 @@ public class IfStatement extends Statement {
 			printLn("ELSE");
 			falseCondition.print(level + 1);
 		}
+	}
+	
+	public boolean hasElseBlock() {
+		return (falseCondition != null);
 	}
 }

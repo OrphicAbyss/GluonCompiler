@@ -1,9 +1,6 @@
 package gluoncompiler.syntax;
 
-import gluoncompiler.Keyword;
-import gluoncompiler.Operator;
-import gluoncompiler.Token;
-import gluoncompiler.TokenType;
+import gluoncompiler.*;
 import java.util.ArrayList;
 
 /**
@@ -11,30 +8,26 @@ import java.util.ArrayList;
  *					  [<Statement Group>]
  */
 public class StatementGroup extends SyntaxObject {
+	
 	Token first;
 	Keyword[] targetKeywords;
 	Operator[] targetOperators;
 	ArrayList<Statement> children;
 	
-	public StatementGroup(Token start){
-		first = start;
-		children = new ArrayList<>();
-		targetKeywords = new Keyword[0];
-		targetOperators = new Operator[0];
-	}
-	
-	public StatementGroup(Token start, Keyword[] targets){
+	public StatementGroup(Token start, Keyword[] targets, ScopeObject parentScope) {
 		first = start;
 		children = new ArrayList<>();
 		targetKeywords = targets;
 		targetOperators = new Operator[0];
+		scope = new ScopeObject(parentScope, false);
 	}
 	
-	public StatementGroup(Token start, Operator[] targets){
+	public StatementGroup(Token start, Operator[] targets, ScopeObject parentScope) {
 		first = start;
 		children = new ArrayList<>();
 		targetKeywords = new Keyword[0];
 		targetOperators = targets;
+		scope = new ScopeObject(parentScope, false);
 	}
 	
 	@Override
@@ -47,37 +40,36 @@ public class StatementGroup extends SyntaxObject {
 				case KEYWORD:
 					switch (next.getKeyword()) {
 						case VAR:
-							stmt = new DefineVariable(next);
+							stmt = new DefineVariable(next, scope);
 							break;
 						case IF:
-							stmt = new IfStatement(next);
+							stmt = new IfStatement(next, scope);
 							break;
 						case FOR:
-							stmt = new ForStatement(next);
+							stmt = new ForStatement(next, scope);
 							break;
 						case WHILE:
-							stmt = new WhileStatement(next);
+							stmt = new WhileStatement(next, scope);
 							break;
 						case BREAK:
-							stmt = new BreakStatement(next);
+							stmt = new BreakStatement(next, scope);
 							break;
 						default:
-							gluoncompiler.Error.abort("Unexpected keyword found: " + first.getKeyword().name() + " when parsing Statement.");
-							return null;
+							throw new RuntimeException("Unexpected keyword found: " + next);
 					}
 					break;
 				case IDENTIFIER:
-					stmt = new Statement(next);
+					stmt = new Statement(next, scope);
 					break;
 				default:
-					TokenType[] expected = {TokenType.KEYWORD, TokenType.IDENTIFIER};
-					gluoncompiler.Error.expected(expected, first, "Statement");
-					return null;
+					throw new RuntimeException("Unexpected token. Expecting Keyword, Identifier, found: " + next);
 			}
 			
 			children.add(stmt);
 			next = stmt.parse();
-			assert(next.isNewline());
+			if (!next.isNewline())
+				throw new RuntimeException("Expected newline, found: " + next);
+
 			next = next.getNext();
 		}
 		
@@ -109,12 +101,9 @@ public class StatementGroup extends SyntaxObject {
 	}
 	
 	@Override
-	public String emitCode() {
-		StringBuilder sb = new StringBuilder();
-		for (Statement stmt: children) {
-			sb.append(stmt.emitCode());
-		}
-		return sb.toString();
+	public void emitCode(GluonOutput code) {
+		for (Statement stmt: children)
+			stmt.emitCode(code);
 	}
 
 	@Override

@@ -16,31 +16,19 @@ public class GluonOutput {
 		else
 			output.append(String.format("%s\n",codeLine));
 	}
-	
-	public static String codeLine(String code){
-		return "\t" + code + "\n";
-	}
-	
+		
 	public void code(String code){
 		output.append("\t");
 		output.append(code);
 		output.append("\n");
 	}
-	
-	public static String commentLine(String comment){
-		return ";" + comment + "\n";
-	}
-	
+		
 	public void comment(String comment){
 		output.append(";");
 		output.append(comment);
 		output.append("\n");
 	}
-	
-	public static String labelLine(String label){
-		return label + ":\n";
-	}
-	
+		
 	public void label(String label){
 		output.append(label);
 		output.append(":\n");

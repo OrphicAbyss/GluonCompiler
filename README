@@ -14,7 +14,8 @@ Working so far:
 * Break
 * Function defs (Can parse with multiple input parameters and multiple return
 values but code output ignores inputs and outputs
-* Function calls (With no parameters or return values)
+* Function calls (With parameters but no return values)
+* Postfix operators (++,--)
 
 Compiles programs to ASM code. Can be compiled with Flat Assembler (FASM) and 
 run in dosbox. ASM output is a Tiny model program, AKA COM executable. 64bit
@@ -27,7 +28,11 @@ Future direction:
 * Support for floating point numbers
 * Support for unsigned integers
 * Support for different sized variables
+* Add scoping of variables
 * Finish function call/defs
+* Allow functions to accept literals and expressions as parameters
+* Add classes
+* Add scoping for class objects
 * More operator support
 * Make ASM output work on windows 64 and linux (maybe using c libs)
 * More consistant syntax

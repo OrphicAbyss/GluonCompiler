@@ -11,14 +11,23 @@ import gluoncompiler.Token;
  * TODO: add level under for postfix operators
  */
 class Factor extends SyntaxObject {
+	
 	Token first;
+
 	boolean unaryMinus;
 	boolean unaryPlus;
+	boolean preIncrement;
+	boolean postIncrement;
+	boolean preDecrement;
+	boolean postDecrement;
+
 	BooleanExpression subExpression;
-	SyntaxObject value;
+	Variable variable;
+	LiteralNumber literal;
 	
-	public Factor(Token test) {
-		first = test;
+	public Factor(Token start, ScopeObject parentScopet) {
+		first = start;
+		scope = parentScopet;
 	}
 
 	@Override
@@ -26,7 +35,7 @@ class Factor extends SyntaxObject {
 		Token test = first;
 		
 		// test for unary operators
-		if (test.isOperator()){
+		if (test.isOperator()) {
 			Operator testOp = test.getOperator();
 			switch (testOp){
 				case BRACKET_LEFT:
@@ -40,63 +49,111 @@ class Factor extends SyntaxObject {
 					unaryPlus = true;
 					test = test.getNext();
 					break;
+				case INCREMENT:
+					preIncrement = true;
+					test = test.getNext();
+					break;
+				case DECREMENT:
+					preDecrement = true;
+					test = test.getNext();
+					break;
 				default:
 					throw new RuntimeException("Unknown operator: " + testOp);
 			}
 		}
 		
 		// test for 
-		if (test.isOperator()){
-			if (Operator.BRACKET_LEFT.equals(test.getOperator())){
-				// We need to seperate the unary ops to their own level so that we can have -(10*2)
-				subExpression = new BooleanExpression(test.getNext());
-				test = subExpression.parse();
-				assert(Operator.BRACKET_RIGHT.equals(test.getOperator()));
-				return test.getNext();
+		if (test.isOperator(Operator.BRACKET_LEFT)) {
+			// We need to seperate the unary ops to their own level so that we can have -(10*2)
+			subExpression = new BooleanExpression(test.getNext(), scope);
+			test = subExpression.parse();
+
+			if (!test.isOperator(Operator.BRACKET_RIGHT))
+				throw new RuntimeException("Expected closing bracket. Found: " + test);
+
+			test = test.getNext();
+		} else if (test.isLiteral()) {
+			if (preIncrement || preDecrement)
+				throw new RuntimeException("Increment/decrement operators can't operate on literals. Found: " + test.toString());
+			
+			literal = new LiteralNumber(test, scope);
+			test = literal.parse();
+			if (unaryMinus) {
+				literal.setNegative();
+				unaryMinus = false;
 			}
-			throw new RuntimeException("Unknown operator: " + test.getOperator());
-		} else if (test.isLiteral()){
-			value = new LiteralNumber(test);
-		} else if (test.isIdentifier()){
-			value = new Variable(test);	
+		} else if (test.isIdentifier()) {
+			variable = new Variable(test, scope);
+			test = variable.parse();
+			if (test.isOperator(Operator.INCREMENT)) {
+				postIncrement = true;
+				test = test.getNext();
+			} else if (test.isOperator(Operator.DECREMENT)) {
+				postDecrement = true;
+				test = test.getNext();
+			}
 		} else {
 			throw new RuntimeException("Unknown token: " + test);
 		}
-		
-		test = value.parse();
 		return test;
 	}
 
 	@Override
-	public String emitCode() {
-		StringBuilder sb = new StringBuilder();
+	public void emitCode(GluonOutput code) {
 		if (subExpression != null){
-			sb.append(subExpression.emitCode());
+			subExpression.emitCode(code);
+		} else if (literal != null) {
+			literal.emitCode(code);
 		} else {
-			sb.append(value.emitCode());
+			if (preIncrement)
+				code.code("INC " + variable.getLabelName());
+			else if (preDecrement)
+				code.code("DEC " + variable.getLabelName());
+			
+			variable.emitCode(code);
+			
+			if (postIncrement)
+				code.code("INC " + variable.getLabelName());
+			else if (postDecrement)
+				code.code("DEC " + variable.getLabelName());
 		}
 		
 		if (unaryMinus){
-			sb.append(GluonOutput.codeLine("NEG EAX"));
+			code.code("NEG EAX");
 		} else if (unaryPlus){
 			// do nothing
 		}
-		return sb.toString();
 	}
 
 	@Override
 	public void print(int level) {
-		if (subExpression != null){
+		if (subExpression != null) {
 			subExpression.print(level);
 		} else {
-			if (unaryMinus){
+			if (unaryMinus) {
 				printLevel(level);
 				printLn("-");
-			} else if (unaryPlus){
+			} else if (unaryPlus) {
 				printLevel(level);
 				printLn("+");
+			} else if (preIncrement) {
+				printLevel(level);
+				printLn("INCREMENT THEN USE");
+			} else if (preDecrement) {
+				printLn("DECREMENT THEN USE");
 			}
-			value.print(level);
+			
+			if (postIncrement) {
+				printLevel(level);
+				printLn("INCREMENT AFTER USE");
+			} else if (postDecrement) {
+				printLevel(level);
+				printLn("DECREMENT AFTER USE");
+			}
+			if (variable != null)
+				variable.print(level);
+			else
+				literal.print(level);
 		}
 	}
 	

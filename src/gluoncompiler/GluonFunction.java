@@ -7,7 +7,8 @@ import java.util.Collection;
  * Deals with function details
  */
 public class GluonFunction {
-		static ArrayList<String> functions;
+	
+	static ArrayList<String> functions;
 
 	/**
 	 * Register a function in our list of functions

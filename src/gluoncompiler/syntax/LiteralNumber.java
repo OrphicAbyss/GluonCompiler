@@ -10,25 +10,32 @@ public class LiteralNumber extends SyntaxObject {
 	private String value;
 	private Token token;
 	
-	public LiteralNumber(Token token){
-		assert(token.isLiteral());
-		this.value = token.getValue();
+	public LiteralNumber(Token token, ScopeObject parentScope){
+		scope = parentScope;
 		this.token = token;
 	}
 
 	@Override
 	public Token parse() {
+		if (!token.isLiteral())
+			throw new RuntimeException("Expected literal, found: " + token);
+		
+		this.value = token.getValue();
 		return token.getNext();
 	}
 	
 	@Override
-	public String emitCode(){
-		return GluonOutput.codeLine("MOV EAX, " + value);
+	public void emitCode(GluonOutput code){
+		code.code("MOV EAX, " + value);
 	}
 
 	@Override
 	public void print(int level) {
 		printLevel(level);
 		printLn("NUMBER " + value);
+	}
+	
+	public void setNegative(){
+		value = "-" + value;
 	}
 }
