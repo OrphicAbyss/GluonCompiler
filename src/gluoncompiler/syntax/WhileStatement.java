@@ -52,7 +52,7 @@ class WhileStatement extends Statement {
 		code.comment("While Statement");
 		code.label(labelStart);
 		testExp.emitCode(code);
-		code.code("TEST EAX, EAX");
+		code.code("TEST AL, AL ;EAX, EAX");
 		code.code("JZ " + labelEnd);
 		statements.emitCode(code);
 		code.code("JMP " + labelStart);

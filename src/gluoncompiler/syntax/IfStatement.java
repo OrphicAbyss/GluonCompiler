@@ -62,7 +62,7 @@ public class IfStatement extends Statement {
 		
 		code.comment("If Statement");
 		testExpression.emitCode(code);
-		code.code("TEST EAX, EAX");
+		code.code("TEST AL, AL ; EAX, EAX");
 		
 		if (hasElseBlock())
 			code.code("JZ " + labelElse);

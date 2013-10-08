@@ -97,7 +97,7 @@ public class Function extends SyntaxObject {
 		code.comment("Function: " + funcName.getValue());
 		String funcLabel = GluonFunction.getLabel(funcName.getValue());
 		// Setup variables passed in on stack for use
-		int offset = 2;// + 4 * parameters.size();
+		int offset = 4;// + 4 * parameters.size();
 		int used = 4;
 		for (Variable parameter: parameters){
 			int stackOffset = offset + used;

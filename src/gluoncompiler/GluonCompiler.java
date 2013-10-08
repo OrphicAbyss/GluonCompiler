@@ -10,82 +10,100 @@ import java.util.logging.Logger;
 /**
  * Simple compiler for language code named 'Gluon'
  *
- * TODO: add functions
- * TODO: add classes
- * TODO: add strings
- * TODO: add arrays
+ * TODO: add functions TODO: add classes TODO: add strings TODO: add arrays
  */
 public class GluonCompiler {
-	static GluonScanner scanner;
-	static Tokeniser tokeniser;
-	static SyntaxBuilder syntaxBuilder;
-	static GluonOutput output;
 
-	/** Parse and Translate Parentheses */
-	public static void Parentheses() {
-		tokeniser.matchOperator(Operator.BRACKET_LEFT, null);
-		//BooleanExpression();
-		tokeniser.matchOperator(Operator.BRACKET_RIGHT, null);
-	}
-	
-	/** Main code compiling */
-	public static void Init() {
+    static GluonScanner scanner;
+    static Tokeniser tokeniser;
+    static SyntaxBuilder syntaxBuilder;
+    static GluonOutput output;
+
+    /**
+     * Main code compiling
+     */
+    public static void compile(boolean linux) {
         GluonFunction.init();
+
+        tokeniser = new Tokeniser(scanner);
+        tokeniser.tokenise();
+
+        syntaxBuilder = new SyntaxBuilder(tokeniser);
+        syntaxBuilder.buildTree();
+
+        Error.init(scanner);
+
+        output = new GluonOutput();
+        if (linux) {
+            GluonLibrary.printLinuxASMStart(output);
+        } else {
+            GluonLibrary.printASMStart(output);
+        }
+
+        syntaxBuilder.emitCode(output);
+
+        GluonLibrary.printVariableFunction(output);
         
-		tokeniser = new Tokeniser(scanner);
-		tokeniser.tokenise();
-		
-		syntaxBuilder = new SyntaxBuilder(tokeniser);
-		syntaxBuilder.buildTree();
-		
-		Error.init(scanner);
-		
-		output = new GluonOutput();
-		GluonLibrary.printASMStart(output);
+        if (linux) {
+            GluonLibrary.printLinuxASMEnd(output);
+        } else {
+            GluonLibrary.printASMEnd(output);
+        }
+    }
 
-		syntaxBuilder.emitCode(output);
+    /**
+     * Takes a filename as the main argument.
+     */
+    public static void main(String[] args) {
+        System.out.println("Gluon Compiler");
+        if (args.length == 0) {
+            // Print out help
+            
+            System.out.println("Usage: GluonCompiler [-linux] <input_file> [output_file]");
+            //scanner = new GluonScanner();
+        } else {
+            int parsedArguments = 0;
+            boolean linuxBuild = false;
+            if ("-linux".equalsIgnoreCase(args[parsedArguments])) {
+                linuxBuild = true;
+                parsedArguments++;
+            }
+            
+            if (parsedArguments >= args.length) {
+                System.err.println("Not enough arguments expected filename.");
+                return;
+            }
+            
+            System.out.println("Reading source file: " + args[parsedArguments]);
+            // Make sure the source file exists
+            File source = new File(args[parsedArguments]);
+            parsedArguments++;
+            if (!source.exists()) {
+                Error.abort("Source file does not exist.");
+            } else {
+                scanner = new GluonScanner(source);
+            }
 
-		GluonLibrary.printASMEnd(output);
-		GluonLibrary.printVariableFunction(output);
-		
-		System.out.print(output.getOutput());
-	}
+            compile(linuxBuild);
 
-	/**
-	 * Takes a filename as the main argument.
-	 */
-	public static void main(String[] args) {
-		if (args.length == 0){
-			// Print out help
-			System.out.println("Gluon Compiler - No filename provided input from terminal:");
-			scanner = new GluonScanner();
-		} else {
-			System.out.println("Gluon Compiler - Reading source file: " + args[0]);
-			// Make sure the source file exists
-			File source = new File(args[0]);
-			if (!source.exists()){
-				Error.abort("Source file does not exist.");
-			} else {
-				scanner = new GluonScanner(source);
-			}
-		}
-
-		Init();
-        if (args.length == 2) {
-            FileWriter fw = null;
-            try {
-                File file = new File(args[1]);
-                fw = new FileWriter(file);
-                fw.append(output.getOutput());
-            } catch (IOException ex) {
-                Logger.getLogger(GluonCompiler.class.getName()).log(Level.SEVERE, null, ex);
-            } finally {
+            if (parsedArguments < args.length) {
+                FileWriter fw = null;
                 try {
-                    fw.close();
+                    File file = new File(args[parsedArguments]);
+                    fw = new FileWriter(file);
+                    fw.append(output.getOutput());
                 } catch (IOException ex) {
                     Logger.getLogger(GluonCompiler.class.getName()).log(Level.SEVERE, null, ex);
+                } finally {
+                    try {
+                        fw.close();
+                    } catch (IOException ex) {
+                        Logger.getLogger(GluonCompiler.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
+            } else {
+                System.out.print(output.getOutput());
             }
         }
-	}
+    }
 }
