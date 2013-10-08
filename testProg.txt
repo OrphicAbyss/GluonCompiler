@@ -1,4 +1,4 @@
-def main(): {
+def main() {
    var test = 1
    test += 1 + 1
    test -= 1
@@ -29,14 +29,14 @@ def main(): {
    testFunc(test, count, value, forValue)
 }
 
-def printCount(max): {
+def printCount(max) {
    var test
    for (test = 1: test<max: test += 1)
        print(test)
    end
 }
 
-def testFunc(one, two, three, four): {
+def testFunc(one, two, three, four) {
    print(one)
    print(two)
    print(three)

@@ -7,7 +7,7 @@ import gluoncompiler.Token;
 import java.util.ArrayList;
 
 /**
- * Function Def :=  def <Identifier>(<Paramaters>):<Returns> {
+ * Function Def :=  def <Identifier>(<Paramaters>)[:(<Returns>)] {
  *						<Statement Group>
  *                  }
  * 
@@ -54,16 +54,25 @@ public class Function extends SyntaxObject {
 			throw new RuntimeException("Expected ')' for function parmater list, found: " + test);
 		
 		test = test.getNext();
-		if (!test.isOperator(Operator.COLON))
-			throw new RuntimeException("Expected ':' in function def, found: " + test);
-		
-		test = test.getNext();
-		while (test.isIdentifier()){
-			returns.add(test);
-			test = test.getNext();
-			if (test.isOperator(Operator.COMMA))
-				test = test.getNext();
-		}
+		if (!test.isOperator(Operator.COLON) && !test.isOperator(Operator.BRACE_LEFT))
+			throw new RuntimeException("Expected ':' or '{' in function def, found: " + test);
+
+        if (test.isOperator(Operator.COLON)) {
+            test = funcName.getNext();
+            if (!test.isOperator(Operator.BRACKET_LEFT))
+                throw new RuntimeException("Expected '(' for function return list, found: " + test);
+
+            test = test.getNext();
+            while (test.isIdentifier()){
+                returns.add(test);
+                test = test.getNext();
+                if (test.isOperator(Operator.COMMA))
+                    test = test.getNext();
+            }
+
+            if (!test.isOperator(Operator.BRACKET_RIGHT))
+                throw new RuntimeException("Expected ')' for function return list, found: " + test);
+        }
 		
 		if (!test.isOperator(Operator.BRACE_LEFT))
 			throw new RuntimeException("Expected opening brace for function logic, found: " + test);
